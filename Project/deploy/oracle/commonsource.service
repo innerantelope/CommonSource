@@ -1,0 +1,17 @@
+[Unit]
+Description=CommonSource Flask API
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=commonsource
+Group=commonsource
+WorkingDirectory=__COMMONSOURCE_ROOT__/Project/app
+EnvironmentFile=__COMMONSOURCE_ROOT__/Project/deploy/oracle/commonsource.env
+ExecStart=__COMMONSOURCE_ROOT__/.venv/bin/gunicorn --bind 127.0.0.1:5050 --workers 1 --threads 8 --timeout 300 --access-logfile - --error-logfile - search_api:app
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

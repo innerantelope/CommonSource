@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CommonSource - Document</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --red: #C0271F;
+    --dark: #1A1A1A;
+    --mid: #4A4A4A;
+    --light: #8A8A8A;
+    --rule: #E0DDD8;
+    --bg: #F7F6F2;
+    --white: #FFFFFF;
+    --card: #FFFFFF;
+    --serif: 'Georgia', 'Times New Roman', serif;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  body {
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--dark);
+    font-family: var(--sans);
+  }
+  header {
+    background: var(--dark);
+    border-bottom: 3px solid var(--red);
+    padding: 0 24px;
+  }
+  .header-inner {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 24px 0 20px;
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: flex-end;
+  }
+  .logo {
+    color: var(--white);
+    font-family: var(--serif);
+    font-size: 1.8rem;
+    font-weight: 700;
+    text-decoration: none;
+  }
+  .logo span { color: var(--red); }
+  .tagline {
+    color: #A0A0A0;
+    font-size: 0.76rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 5px;
+  }
+  .back-link {
+    color: #CCC;
+    font-size: 0.82rem;
+    text-decoration: none;
+    font-weight: 600;
+  }
+  .back-link:hover { color: var(--white); }
+  main {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 26px 24px 56px;
+  }
+  .reader-shell {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .reader-header {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: rgba(255, 255, 255, 0.97);
+    border-bottom: 1px solid var(--rule);
+    padding: 22px 28px 18px;
+    backdrop-filter: blur(8px);
+  }
+  .eyebrow {
+    color: var(--red);
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  h1 {
+    font-family: var(--serif);
+    font-size: clamp(1.8rem, 4vw, 2.7rem);
+    line-height: 1.18;
+    margin-bottom: 14px;
+  }
+  .meta-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .meta-pill {
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    color: var(--mid);
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    padding: 4px 10px;
+    text-transform: uppercase;
+  }
+  .reader-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 16px 28px;
+    border-bottom: 1px solid var(--rule);
+    background: #FCFBF8;
+  }
+  .action-btn {
+    border: 1px solid var(--rule);
+    background: var(--white);
+    color: var(--dark);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-weight: 700;
+    padding: 9px 12px;
+    text-decoration: none;
+  }
+  .action-btn:hover {
+    border-color: var(--red);
+    color: var(--red);
+  }
+  .action-btn.saved {
+    border-color: var(--red);
+    color: var(--red);
+  }
+  .reader-tool {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .reader-input {
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    background: var(--bg);
+    color: var(--dark);
+    font: inherit;
+    padding: 9px 10px;
+    min-width: 180px;
+  }
+  textarea.reader-input {
+    width: 100%;
+    min-height: 76px;
+    resize: vertical;
+    line-height: 1.5;
+  }
+  .action-status {
+    align-self: center;
+    color: var(--light);
+    font-size: 0.8rem;
+    min-height: 1.2em;
+  }
+  .translation-status {
+    flex-basis: 100%;
+    color: var(--light);
+    font-size: 0.8rem;
+    min-height: 1.2em;
+  }
+  .reader-body {
+    padding: 28px;
+  }
+  .document-content {
+    color: var(--mid);
+    font-size: 1.05rem;
+    line-height: 1.85;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .section {
+    border-top: 1px solid var(--rule);
+    padding: 24px 28px;
+  }
+  .section h2 {
+    color: var(--dark);
+    font-family: var(--serif);
+    font-size: 1.25rem;
+    margin-bottom: 14px;
+  }
+  .tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .tag {
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    color: var(--mid);
+    font-size: 0.8rem;
+    padding: 5px 10px;
+  }
+  .metadata-table {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    gap: 10px 18px;
+    color: var(--mid);
+    font-size: 0.92rem;
+  }
+  .metadata-label {
+    color: var(--light);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 0.72rem;
+  }
+  .citation-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .citation-card {
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 12px 14px;
+  }
+  .citation-card strong {
+    display: block;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+  .citation-text {
+    color: var(--mid);
+    font-size: 0.9rem;
+    line-height: 1.55;
+    margin-bottom: 8px;
+  }
+  .related-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .related-card {
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    color: inherit;
+    display: block;
+    padding: 14px 16px;
+    text-decoration: none;
+  }
+  .related-card:hover { border-color: var(--red); }
+  .related-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    align-items: center;
+  }
+  .related-title {
+    font-family: var(--serif);
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .related-meta {
+    color: var(--light);
+    font-size: 0.78rem;
+  }
+  .state {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    color: var(--mid);
+    padding: 30px;
+  }
+  .error { color: var(--red); }
+  .note-card {
+    border-top: 1px solid var(--rule);
+    padding: 12px 0;
+  }
+  .note-card:first-child { border-top: 0; }
+  .note-selected {
+    color: var(--mid);
+    font-size: 0.82rem;
+    line-height: 1.55;
+    margin-bottom: 6px;
+  }
+  .note-text {
+    color: var(--dark);
+    font-size: 0.9rem;
+    line-height: 1.55;
+  }
+  @media (max-width: 680px) {
+    header { padding: 0 18px; }
+    .header-inner { align-items: flex-start; flex-direction: column; }
+    main { padding: 18px 14px 36px; }
+    .reader-header, .reader-actions, .reader-body, .section { padding-left: 18px; padding-right: 18px; }
+    .metadata-table { grid-template-columns: 1fr; gap: 4px; }
+    .document-content { font-size: 1rem; line-height: 1.75; }
+  }
+</style>
+<link rel="stylesheet" href="/theme.css">
+</head>
+<body>
+<header>
+  <div class="header-inner">
+    <div>
+      <a class="logo" href="/">Common<span>Source</span></a>
+      <div class="tagline">Archive reader</div>
+    </div>
+  </div>
+</header>
+
+<main id="app">
+  <div class="state">Loading document...</div>
+</main>
+
+<script>
+const API = window.location.protocol === 'file:' ? 'http://localhost:5050' : '';
+const ACCESS_TOKEN_KEY = 'cs_access_token';
+const REFRESH_TOKEN_KEY = 'cs_refresh_token';
+const USER_KEY = 'cs_user';
+let currentDocument = null;
+let currentCitations = null;
+let csrfToken = '';
+const TRANSLATION_LANGUAGES = [
+  ['hi', 'Hindi'], ['bn', 'Bengali'], ['ta', 'Tamil'], ['te', 'Telugu'],
+  ['mr', 'Marathi'], ['gu', 'Gujarati'], ['ur', 'Urdu'], ['kn', 'Kannada'],
+  ['ml', 'Malayalam'], ['or', 'Odia'], ['pa', 'Punjabi'], ['as', 'Assamese'],
+  ['ne', 'Nepali'], ['fr', 'French'], ['es', 'Spanish'], ['ar', 'Arabic'], ['sw', 'Swahili']
+];
+
+function getToken() {
+  return localStorage.getItem(ACCESS_TOKEN_KEY) || '';
+}
+
+function clearAuthState() {
+  localStorage.removeItem(ACCESS_TOKEN_KEY);
+  localStorage.removeItem(REFRESH_TOKEN_KEY);
+  localStorage.removeItem(USER_KEY);
+  csrfToken = '';
+}
+
+async function getCsrfToken() {
+  if (csrfToken) return csrfToken;
+  const res = await fetch(`${API}/api/auth/csrf`, {
+    headers: { Authorization: `Bearer ${getToken()}` }
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
+  csrfToken = data.csrf_token || '';
+  return csrfToken;
+}
+
+async function fetchAuth(path, options = {}) {
+  const token = getToken();
+  if (!token) throw new Error('Login required');
+  const method = (options.method || 'GET').toUpperCase();
+  const headers = { ...(options.headers || {}), Authorization: `Bearer ${token}` };
+  if (['POST', 'PATCH', 'PUT', 'DELETE'].includes(method)) {
+    headers['X-CSRF-Token'] = headers['X-CSRF-Token'] || await getCsrfToken();
+  }
+  const res = await fetch(`${API}${path}`, { ...options, headers });
+  const data = await res.json().catch(() => ({}));
+  if (res.status === 401) clearAuthState();
+  if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
+  return data;
+}
+
+function escHtml(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function formatDate(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value).slice(0, 10);
+  return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+function documentIdFromPath() {
+  const match = window.location.pathname.match(/\/document\/(.+)$/);
+  return match ? decodeURIComponent(match[1]) : '';
+}
+
+function metaPill(label, value) {
+  if (!value) return '';
+  return `<span class="meta-pill">${escHtml(label ? `${label}: ${value}` : value)}</span>`;
+}
+
+function metadataRow(label, value) {
+  if (!value) return '';
+  return `<div class="metadata-label">${escHtml(label)}</div><div>${escHtml(value)}</div>`;
+}
+
+function translationOptions() {
+  return [
+    '<option value="">Original language</option>',
+    ...TRANSLATION_LANGUAGES.map(([code, label]) => `<option value="${escHtml(code)}">${escHtml(label)}</option>`)
+  ].join('');
+}
+
+function renderRelated(items) {
+  if (!items?.length) return '<p class="related-meta">No related documents found yet.</p>';
+  return `<div class="related-list">${items.map(item => `
+    <div class="related-row">
+      <a class="related-card" href="/document/${encodeURIComponent(item.document_id)}">
+        <div class="related-title">${escHtml(item.title || 'Untitled')}</div>
+        <div class="related-meta">
+          ${escHtml(item.category || 'Related document')}
+          ${item.relevance_score ? ` - relevance ${escHtml(item.relevance_score)}` : ''}
+        </div>
+      </a>
+      <button class="action-btn" type="button" data-bookmark-document="${escHtml(item.document_id)}">Save</button>
+    </div>
+  `).join('')}</div>`;
+}
+
+function renderTags(tags) {
+  if (!tags?.length) return '<p class="related-meta">No tags available.</p>';
+  return `<div class="tag-list">${tags.slice(0, 40).map(tag => `<span class="tag">${escHtml(tag)}</span>`).join('')}</div>`;
+}
+
+function renderDocument(doc) {
+  const source = doc.source_detail || {};
+  const date = formatDate(doc.upload_date);
+  const sourceLink = source.url
+    ? `<a class="action-btn" href="${escHtml(source.url)}" target="_blank" rel="noopener">Open original source</a>`
+    : '';
+  const downloadLink = doc.download_url
+    ? `<a class="action-btn" href="${escHtml(API + doc.download_url)}">Download original</a>`
+    : '';
+  document.title = `${doc.title || 'Document'} - CommonSource`;
+  document.getElementById('app').innerHTML = `
+    <article class="reader-shell">
+      <div class="reader-header">
+        <div class="eyebrow">${escHtml(doc.source || 'CommonSource Archive')}</div>
+        <h1 id="reader-title">${escHtml(doc.title || 'Untitled')}</h1>
+        <div class="meta-grid">
+          ${metaPill('', doc.category)}
+          ${metaPill('', doc.document_type)}
+          ${metaPill('', doc.language)}
+          ${metaPill('Words', doc.word_count || '')}
+          ${metaPill('', date)}
+        </div>
+      </div>
+      <div class="reader-actions">
+        <button class="action-btn" type="button" id="bookmark-btn">Save document</button>
+        <button class="action-btn" type="button" id="copy-text-btn">Copy text</button>
+        <button class="action-btn" type="button" id="copy-citation-btn">Copy citation</button>
+        <button class="action-btn" type="button" id="share-link-btn">Share link</button>
+        <select class="reader-input" id="document-translate-target" aria-label="Translate full article">
+          ${translationOptions()}
+        </select>
+        <button class="action-btn" type="button" id="translate-document-btn">Translate full article</button>
+        ${downloadLink}
+        ${sourceLink}
+        <span class="action-status" id="action-status"></span>
+        <span class="translation-status" id="document-translation-status"></span>
+      </div>
+      <div class="reader-body">
+        <div class="document-content" id="document-content"></div>
+      </div>
+      <section class="section">
+        <h2>Metadata</h2>
+        <div class="metadata-table">
+          ${metadataRow('Category', doc.category)}
+          ${metadataRow('Language', doc.language)}
+          ${metadataRow('Document Type', doc.document_type)}
+          ${metadataRow('Source', doc.source)}
+          ${metadataRow('Author', source.author)}
+          ${metadataRow('Date', date)}
+          ${metadataRow('Word Count', doc.word_count)}
+          ${metadataRow('Chunks', doc.chunk_count)}
+        </div>
+      </section>
+      <section class="section">
+        <h2>Citations</h2>
+        <div id="citations-list"><p class="related-meta">Loading citations...</p></div>
+      </section>
+      <section class="section">
+        <h2>Tags</h2>
+        ${renderTags(doc.tags || [])}
+      </section>
+      <section class="section" id="reader-tools-section">
+        <h2>My Reader Tools</h2>
+        <p class="related-meta" id="reader-tools-status">Login to save bookmarks, organize collections, and add notes.</p>
+        <div class="reader-tool" id="collection-tool" style="display:none">
+          <select class="reader-input" id="collection-select"></select>
+          <button class="action-btn" type="button" id="add-collection-btn">Add to collection</button>
+        </div>
+        <div class="reader-tool" id="note-tool" style="display:none">
+          <input class="reader-input" id="selected-text-input" placeholder="Select text or paste highlight">
+          <button class="action-btn" type="button" id="capture-selection-btn">Use selected text</button>
+          <textarea class="reader-input" id="note-text-input" placeholder="Add a note..."></textarea>
+          <button class="action-btn" type="button" id="save-note-btn">Save note</button>
+        </div>
+        <div id="notes-list"></div>
+      </section>
+      <section class="section">
+        <h2>Related Documents</h2>
+        ${renderRelated(doc.related_documents || [])}
+      </section>
+      <section class="section" id="recommendations-section" style="display:none">
+        <h2>Recommended For You</h2>
+        <div id="recommendations-list"></div>
+      </section>
+    </article>`;
+  document.getElementById('document-content').textContent = doc.full_content || 'No full document text is available for this archive item yet.';
+  document.getElementById('bookmark-btn')?.addEventListener('click', () => toggleBookmark(doc.document_id, document.getElementById('bookmark-btn')));
+  document.getElementById('copy-text-btn')?.addEventListener('click', copyText);
+  document.getElementById('copy-citation-btn')?.addEventListener('click', () => copyCitation('apa'));
+  document.getElementById('share-link-btn')?.addEventListener('click', shareLink);
+  document.getElementById('translate-document-btn')?.addEventListener('click', () => translateDocument());
+  document.getElementById('capture-selection-btn')?.addEventListener('click', captureSelection);
+  document.getElementById('save-note-btn')?.addEventListener('click', saveNote);
+  document.getElementById('add-collection-btn')?.addEventListener('click', addToCollection);
+  document.querySelectorAll('[data-bookmark-document]').forEach(btn => {
+    btn.addEventListener('click', () => toggleBookmark(btn.dataset.bookmarkDocument || '', btn));
+  });
+}
+
+function setDocumentTranslationStatus(message, isError = false) {
+  const status = document.getElementById('document-translation-status');
+  if (!status) return;
+  status.textContent = message || '';
+  status.style.color = isError ? 'var(--red)' : 'var(--light)';
+}
+
+function showDocumentVersion({ title, content, language = '', translated = false }) {
+  const titleEl = document.getElementById('reader-title');
+  const contentEl = document.getElementById('document-content');
+  if (titleEl) titleEl.textContent = title || currentDocument?.title || 'Untitled';
+  if (contentEl) {
+    contentEl.textContent = content || 'No full document text is available for this archive item yet.';
+    contentEl.dir = language === 'ur' || language === 'ar' ? 'rtl' : 'ltr';
+  }
+  currentDocument.display_title = title || currentDocument.title || '';
+  currentDocument.display_content = content || currentDocument.full_content || '';
+  document.title = `${currentDocument.display_title || 'Document'} - CommonSource`;
+  const button = document.getElementById('translate-document-btn');
+  if (button) button.textContent = translated ? 'Show selected language' : 'Translate full article';
+}
+
+async function translateDocument(targetOverride = '') {
+  if (!currentDocument) return;
+  const select = document.getElementById('document-translate-target');
+  const button = document.getElementById('translate-document-btn');
+  const target = targetOverride || select?.value || '';
+  if (select && targetOverride) select.value = targetOverride;
+
+  if (!target) {
+    showDocumentVersion({
+      title: currentDocument.title,
+      content: currentDocument.full_content,
+      language: '',
+      translated: false,
+    });
+    setDocumentTranslationStatus('Showing original document');
+    const url = new URL(window.location.href);
+    url.searchParams.delete('lang');
+    window.history.replaceState({}, '', url);
+    return;
+  }
+
+  const languageLabel = select?.selectedOptions?.[0]?.textContent || target;
+  if (button) button.disabled = true;
+  if (select) select.disabled = true;
+  setDocumentTranslationStatus(`Translating the complete article to ${languageLabel}...`);
+  const controller = new AbortController();
+  const timer = window.setTimeout(() => controller.abort(), 305000);
+  try {
+    const res = await fetch(
+      `${API}/api/document/${encodeURIComponent(currentDocument.document_id)}/translate?timeout=300`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ target }),
+        signal: controller.signal,
+      }
+    );
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || data.error) {
+      throw new Error(data.error || `Translation service returned ${res.status}. Please try again.`);
+    }
+    showDocumentVersion({
+      title: data.translated_title,
+      content: data.translated_content,
+      language: target,
+      translated: true,
+    });
+    const url = new URL(window.location.href);
+    url.searchParams.set('lang', target);
+    window.history.replaceState({}, '', url);
+    const cacheLabel = data.cached ? ' (cached)' : '';
+    const warningLabel = data.warning ? ` ${data.warning}` : '';
+    setDocumentTranslationStatus(
+      `Full article translated to ${data.target_language || languageLabel}${cacheLabel}.${warningLabel}`,
+      Boolean(data.warning)
+    );
+  } catch (err) {
+    const message = err.name === 'AbortError'
+      ? 'Full article translation timed out. The original document is still available.'
+      : (err.message || 'Full article translation is temporarily unavailable. The original document is still available.');
+    setDocumentTranslationStatus(message, true);
+  } finally {
+    window.clearTimeout(timer);
+    if (button) button.disabled = false;
+    if (select) select.disabled = false;
+  }
+}
+
+function renderCitations(citations) {
+  const list = document.getElementById('citations-list');
+  if (!list) return;
+  if (!citations) {
+    list.innerHTML = '<p class="related-meta">No citations available.</p>';
+    return;
+  }
+  const labels = { apa: 'APA', mla: 'MLA', chicago: 'Chicago' };
+  list.innerHTML = `<div class="citation-list">${Object.entries(labels).map(([format, label]) => `
+    <div class="citation-card">
+      <strong>${escHtml(label)}</strong>
+      <div class="citation-text">${escHtml(citations[format] || '')}</div>
+      <button class="action-btn" type="button" data-copy-citation="${escHtml(format)}">Copy ${escHtml(label)}</button>
+    </div>
+  `).join('')}</div>`;
+  list.querySelectorAll('[data-copy-citation]').forEach(btn => {
+    btn.addEventListener('click', () => copyCitation(btn.dataset.copyCitation || 'apa'));
+  });
+}
+
+async function loadCitations(documentId) {
+  try {
+    const res = await fetch(`${API}/api/document/${encodeURIComponent(documentId)}/citations`);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
+    currentCitations = data.citations || null;
+    renderCitations(currentCitations);
+  } catch (err) {
+    const list = document.getElementById('citations-list');
+    if (list) list.innerHTML = `<p class="related-meta">${escHtml(err.message || 'Could not load citations.')}</p>`;
+  }
+}
+
+function setActionStatus(message) {
+  const status = document.getElementById('action-status');
+  if (!status) return;
+  status.textContent = message;
+  window.setTimeout(() => {
+    if (status.textContent === message) status.textContent = '';
+  }, 2200);
+}
+
+async function copyCitation(format = 'apa') {
+  try {
+    const citation = currentCitations?.[format] || currentCitations?.apa || '';
+    if (!citation) {
+      setActionStatus('Citation not ready');
+      return;
+    }
+    await navigator.clipboard.writeText(citation);
+    setActionStatus('Citation copied');
+  } catch {
+    setActionStatus('Copy failed');
+  }
+}
+
+async function copyText() {
+  try {
+    await navigator.clipboard.writeText(currentDocument?.display_content || currentDocument?.full_content || '');
+    setActionStatus('Text copied');
+  } catch {
+    setActionStatus('Copy failed');
+  }
+}
+
+async function shareLink() {
+  try {
+    await navigator.clipboard.writeText(window.location.href);
+    setActionStatus('Link copied');
+  } catch {
+    setActionStatus('Share failed');
+  }
+}
+
+function updateBookmarkButtons(bookmarks) {
+  const byDocument = new Map((bookmarks || []).map(item => [item.document_id, item.bookmark_id]));
+  document.querySelectorAll('[data-bookmark-document], #bookmark-btn').forEach(btn => {
+    const documentId = btn.id === 'bookmark-btn' ? currentDocument?.document_id : btn.dataset.bookmarkDocument;
+    const bookmarkId = byDocument.get(documentId) || (documentId === currentDocument?.document_id ? currentDocument?.bookmark_id : '');
+    btn.dataset.bookmarkId = bookmarkId || '';
+    btn.textContent = bookmarkId ? 'Saved' : (btn.id === 'bookmark-btn' ? 'Save document' : 'Save');
+    btn.classList.toggle('saved', !!bookmarkId);
+  });
+}
+
+async function toggleBookmark(documentId, btn) {
+  if (!getToken()) {
+    window.location.href = '/login';
+    return;
+  }
+  btn.disabled = true;
+  try {
+    const bookmarkId = btn.dataset.bookmarkId || '';
+    if (bookmarkId) {
+      await fetchAuth(`/api/bookmarks/${encodeURIComponent(bookmarkId)}`, { method: 'DELETE' });
+      btn.dataset.bookmarkId = '';
+      btn.textContent = btn.id === 'bookmark-btn' ? 'Save document' : 'Save';
+      btn.classList.remove('saved');
+      setActionStatus('Bookmark removed');
+    } else {
+      const data = await fetchAuth('/api/bookmarks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ document_id: documentId }),
+      });
+      btn.dataset.bookmarkId = data.bookmark?.id || '';
+      btn.textContent = 'Saved';
+      btn.classList.add('saved');
+      setActionStatus('Bookmarked');
+    }
+  } catch (err) {
+    setActionStatus(err.message || 'Bookmark failed');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function captureSelection() {
+  const selected = String(window.getSelection?.() || '').trim();
+  if (selected) document.getElementById('selected-text-input').value = selected;
+}
+
+async function saveNote() {
+  const selectedText = document.getElementById('selected-text-input')?.value?.trim() || '';
+  const noteText = document.getElementById('note-text-input')?.value?.trim() || '';
+  if (!selectedText && !noteText) {
+    setActionStatus('Add selected text or a note');
+    return;
+  }
+  try {
+    await fetchAuth('/api/notes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        document_id: currentDocument.document_id,
+        selected_text: selectedText,
+        note_text: noteText,
+      }),
+    });
+    document.getElementById('selected-text-input').value = '';
+    document.getElementById('note-text-input').value = '';
+    setActionStatus('Note saved');
+    await loadNotes();
+  } catch (err) {
+    setActionStatus(err.message || 'Note failed');
+  }
+}
+
+function renderNotes(notes) {
+  const list = document.getElementById('notes-list');
+  if (!list) return;
+  if (!notes?.length) {
+    list.innerHTML = '<p class="related-meta">No notes yet.</p>';
+    return;
+  }
+  list.innerHTML = notes.map(note => `
+    <div class="note-card">
+      ${note.selected_text ? `<div class="note-selected">"${escHtml(note.selected_text)}"</div>` : ''}
+      <div class="note-text">${escHtml(note.note_text || '')}</div>
+      <button class="action-btn" type="button" data-delete-note="${escHtml(note.id)}">Delete</button>
+    </div>
+  `).join('');
+  list.querySelectorAll('[data-delete-note]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      try {
+        await fetchAuth(`/api/notes/${encodeURIComponent(btn.dataset.deleteNote)}`, { method: 'DELETE' });
+        await loadNotes();
+      } catch (err) {
+        setActionStatus(err.message || 'Delete failed');
+      }
+    });
+  });
+}
+
+async function loadNotes() {
+  const data = await fetchAuth(`/api/notes?document_id=${encodeURIComponent(currentDocument.document_id)}`);
+  renderNotes(data.notes || []);
+}
+
+async function addToCollection() {
+  const select = document.getElementById('collection-select');
+  const collectionId = select?.value || '';
+  if (!collectionId) {
+    setActionStatus('Create a collection from Dashboard first');
+    return;
+  }
+  try {
+    await fetchAuth(`/api/collections/${encodeURIComponent(collectionId)}/documents`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ document_id: currentDocument.document_id }),
+    });
+    setActionStatus('Added to collection');
+  } catch (err) {
+    setActionStatus(err.message || 'Collection failed');
+  }
+}
+
+function renderRecommendations(items) {
+  const section = document.getElementById('recommendations-section');
+  const list = document.getElementById('recommendations-list');
+  if (!section || !list || !items?.length) return;
+  section.style.display = '';
+  list.innerHTML = renderRelated(items);
+  list.querySelectorAll('[data-bookmark-document]').forEach(btn => {
+    btn.addEventListener('click', () => toggleBookmark(btn.dataset.bookmarkDocument || '', btn));
+  });
+}
+
+async function loadEngagement(documentId) {
+  if (!getToken()) return;
+  document.getElementById('reader-tools-status').textContent = '';
+  document.getElementById('collection-tool').style.display = '';
+  document.getElementById('note-tool').style.display = '';
+  try {
+    const [bookmarkData, collectionData, recommendationData] = await Promise.all([
+      fetchAuth('/api/bookmarks'),
+      fetchAuth('/api/collections'),
+      fetchAuth(`/api/recommendations?exclude_document_id=${encodeURIComponent(documentId)}&limit=6`),
+    ]);
+    updateBookmarkButtons(bookmarkData.bookmarks || []);
+    const select = document.getElementById('collection-select');
+    const collections = collectionData.collections || [];
+    select.innerHTML = collections.length
+      ? collections.map(col => `<option value="${escHtml(col.id)}">${escHtml(col.name)}</option>`).join('')
+      : '<option value="">No collections yet</option>';
+    await loadNotes();
+    renderRecommendations(recommendationData.documents || []);
+  } catch (err) {
+    document.getElementById('reader-tools-status').textContent = err.message || 'Could not load reader tools';
+  }
+}
+
+async function loadDocument() {
+  const documentId = documentIdFromPath();
+  if (!documentId) {
+    document.getElementById('app').innerHTML = '<div class="state error">Missing document id.</div>';
+    return;
+  }
+  try {
+    const headers = getToken() ? { Authorization: `Bearer ${getToken()}` } : {};
+    const res = await fetch(`${API}/api/document/${encodeURIComponent(documentId)}`, { headers });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
+    currentDocument = data;
+    currentDocument.display_title = data.title || '';
+    currentDocument.display_content = data.full_content || '';
+    renderDocument(data);
+    const requestedLanguage = new URLSearchParams(window.location.search).get('lang') || '';
+    await Promise.all([loadCitations(documentId), loadEngagement(documentId)]);
+    if (requestedLanguage) await translateDocument(requestedLanguage);
+  } catch (err) {
+    document.getElementById('app').innerHTML = `<div class="state error">${escHtml(err.message || 'Could not load document.')}</div>`;
+  }
+}
+
+loadDocument();
+</script>
+</body>
+</html>

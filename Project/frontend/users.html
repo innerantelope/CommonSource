@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>User Management - CommonSource</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --red: #C0271F;
+  --dark: #1A1A1A;
+  --mid: #4A4A4A;
+  --light: #8A8A8A;
+  --rule: #E0DDD8;
+  --bg: #F7F6F2;
+  --white: #FFFFFF;
+  --serif: Georgia, 'Times New Roman', serif;
+  --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+body { font-family: var(--sans); background: var(--bg); color: var(--dark); min-height: 100vh; }
+header { background: var(--dark); border-bottom: 3px solid var(--red); padding: 0 24px; }
+.header-inner { max-width: 1040px; margin: 0 auto; padding: 22px 0; display: flex; justify-content: space-between; align-items: center; gap: 18px; }
+.logo { font-family: var(--serif); font-size: 1.5rem; font-weight: 700; color: var(--white); text-decoration: none; }
+.logo span { color: var(--red); }
+.nav { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.nav a, .nav button { color: #CCC; background: transparent; border: 1px solid #444; border-radius: 4px; padding: 7px 10px; font-size: 0.76rem; text-decoration: none; cursor: pointer; }
+.nav a:hover, .nav button:hover { border-color: #777; color: var(--white); }
+main { max-width: 1040px; margin: 0 auto; padding: 32px 24px 72px; }
+.intro { max-width: 680px; margin-bottom: 24px; }
+.intro h1 { font-family: var(--serif); font-size: 1.65rem; margin-bottom: 10px; }
+.intro p { color: var(--mid); font-size: 0.9rem; line-height: 1.65; }
+.status { min-height: 22px; color: var(--light); font-size: 0.8rem; margin-bottom: 14px; }
+.status.error { color: var(--red); }
+.panel { background: var(--white); border: 1px solid var(--rule); border-radius: 4px; padding: 18px; margin-bottom: 18px; }
+.panel-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; }
+.panel h2 { font-size: 0.86rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.filters { display: grid; grid-template-columns: 1fr 160px 150px 180px auto; gap: 10px; align-items: end; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--light); }
+.input { width: 100%; font-family: var(--sans); font-size: 0.84rem; padding: 10px 11px; border: 1px solid var(--rule); border-radius: 4px; background: var(--bg); color: var(--dark); outline: none; }
+.input:focus { border-color: var(--red); background: var(--white); }
+.btn { font-family: var(--sans); font-size: 0.8rem; font-weight: 700; padding: 9px 14px; background: var(--red); color: var(--white); border: none; border-radius: 4px; cursor: pointer; }
+.btn.secondary { background: var(--white); color: var(--mid); border: 1px solid var(--rule); }
+.btn:disabled { background: #CCC; cursor: wait; }
+.user-list, .audit-list { display: flex; flex-direction: column; gap: 10px; }
+.user-row { border: 1px solid var(--rule); border-radius: 4px; background: var(--bg); padding: 12px; display: grid; grid-template-columns: 1.2fr 180px 120px 120px auto; gap: 10px; align-items: center; }
+.user-name { font-weight: 700; color: var(--dark); font-size: 0.88rem; margin-bottom: 4px; }
+.user-email, .user-meta, .audit-meta { color: var(--light); font-size: 0.74rem; line-height: 1.5; word-break: break-word; }
+.status-pill { color: var(--red); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; }
+.audit-row { border-bottom: 1px solid var(--rule); padding: 9px 0; }
+.audit-action { font-size: 0.84rem; font-weight: 700; color: var(--dark); margin-bottom: 3px; }
+.empty { color: var(--light); font-size: 0.82rem; padding: 12px 0; }
+.pager { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 12px; color: var(--light); font-size: 0.78rem; flex-wrap: wrap; }
+@media (max-width: 820px) {
+  .filters, .user-row { grid-template-columns: 1fr; }
+  .panel-head { align-items: flex-start; flex-direction: column; }
+}
+</style>
+<link rel="stylesheet" href="/theme.css">
+</head>
+<body>
+<header>
+  <div class="header-inner">
+    <a class="logo" href="/search">Common<span>Source</span></a>
+    <div class="nav" data-role-nav></div>
+  </div>
+</header>
+<main>
+  <section class="intro">
+    <h1>User Management</h1>
+    <p>Search users, adjust roles, activate or suspend accounts, and inspect recent administrative audit history.</p>
+  </section>
+
+  <div class="status" id="status" role="status"></div>
+
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Users</h2>
+      <button class="btn secondary" type="button" onclick="loadUsers()">Refresh</button>
+    </div>
+    <div class="filters">
+      <div class="field">
+        <label for="search">Search</label>
+        <input class="input" id="search" placeholder="Name or email">
+      </div>
+      <div class="field">
+        <label for="role">Role</label>
+        <select class="input" id="role">
+          <option value="">All roles</option>
+          <option value="super_admin">super_admin</option>
+          <option value="admin">admin</option>
+          <option value="publisher">publisher</option>
+          <option value="reviewer">reviewer</option>
+          <option value="reader">reader</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="active">Status</label>
+        <select class="input" id="active">
+          <option value="">All</option>
+          <option value="true">Active</option>
+          <option value="false">Inactive</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="user-sort">Sort</label>
+        <select class="input" id="user-sort">
+          <option value="created_desc">Newest first</option>
+          <option value="created_asc">Oldest first</option>
+          <option value="email_asc">Email A-Z</option>
+          <option value="email_desc">Email Z-A</option>
+        </select>
+      </div>
+      <button class="btn" type="button" onclick="loadUsers()">Search</button>
+    </div>
+    <div class="user-list" id="user-list" style="margin-top:16px">
+      <div class="empty">Loading users...</div>
+    </div>
+    <div class="pager">
+      <span id="user-page-info"></span>
+      <span>
+        <button class="btn secondary" type="button" onclick="changeUserPage(-1)">Previous</button>
+        <button class="btn secondary" type="button" onclick="changeUserPage(1)">Next</button>
+      </span>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Audit History</h2>
+      <button class="btn secondary" type="button" onclick="loadAuditLogs()">Refresh</button>
+    </div>
+    <div class="filters">
+      <div class="field">
+        <label for="audit-search">Search</label>
+        <input class="input" id="audit-search" placeholder="Action, resource, or email">
+      </div>
+      <div class="field">
+        <label for="audit-resource">Resource</label>
+        <select class="input" id="audit-resource">
+          <option value="">All</option>
+          <option value="user">user</option>
+          <option value="publisher">publisher</option>
+          <option value="feed">feed</option>
+          <option value="article">article</option>
+          <option value="qdrant">qdrant</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="audit-sort">Sort</label>
+        <select class="input" id="audit-sort">
+          <option value="timestamp_desc">Newest first</option>
+          <option value="timestamp_asc">Oldest first</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="audit-action">Action</label>
+        <input class="input" id="audit-action" placeholder="Login">
+      </div>
+      <button class="btn" type="button" onclick="loadAuditLogs()">Filter</button>
+    </div>
+    <div class="audit-list" id="audit-list">
+      <div class="empty">Loading audit history...</div>
+    </div>
+    <div class="pager">
+      <span id="audit-page-info"></span>
+      <span>
+        <button class="btn secondary" type="button" onclick="changeAuditPage(-1)">Previous</button>
+        <button class="btn secondary" type="button" onclick="changeAuditPage(1)">Next</button>
+      </span>
+    </div>
+  </section>
+</main>
+
+<script src="/common-nav.js"></script>
+<script>
+const API = window.location.protocol === 'file:' ? 'http://localhost:5050' : '';
+const ACCESS_TOKEN_KEY = 'cs_access_token';
+const REFRESH_TOKEN_KEY = 'cs_refresh_token';
+const USER_KEY = 'cs_user';
+const ROLES = ['super_admin', 'admin', 'publisher', 'reviewer', 'reader'];
+let csrfToken = '';
+let userPage = 1;
+let userTotal = 0;
+let auditPage = 1;
+let auditTotal = 0;
+const PAGE_SIZE = 25;
+
+function escHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+function setStatus(message, isError = false) {
+  const el = document.getElementById('status');
+  el.textContent = message || '';
+  el.classList.toggle('error', !!isError);
+}
+
+function getToken() {
+  return localStorage.getItem(ACCESS_TOKEN_KEY) || '';
+}
+
+function clearAuthState() {
+  localStorage.removeItem(ACCESS_TOKEN_KEY);
+  localStorage.removeItem(REFRESH_TOKEN_KEY);
+  localStorage.removeItem(USER_KEY);
+  csrfToken = '';
+}
+
+async function getCsrfToken() {
+  if (csrfToken) return csrfToken;
+  const token = getToken();
+  const res = await fetch(`${API}/api/auth/csrf`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
+  csrfToken = data.csrf_token || '';
+  return csrfToken;
+}
+
+async function fetchJson(path, options = {}) {
+  const token = getToken();
+  if (!token) {
+    window.location.href = '/login';
+    throw new Error('Login required');
+  }
+  const method = (options.method || 'GET').toUpperCase();
+  const headers = {
+    ...(options.headers || {}),
+    Authorization: `Bearer ${token}`,
+  };
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+    headers['X-CSRF-Token'] = headers['X-CSRF-Token'] || await getCsrfToken();
+  }
+  const res = await fetch(`${API}${path}`, {
+    ...options,
+    headers
+  });
+  const data = await res.json().catch(() => ({}));
+  if (res.status === 401) {
+    clearAuthState();
+    window.location.href = '/login';
+  }
+  if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
+  return data;
+}
+
+async function logoutUser() {
+  const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY) || '';
+  try {
+    await fetch(`${API}/api/auth/logout`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {})
+      },
+      body: JSON.stringify({ refresh_token: refreshToken })
+    });
+  } finally {
+    clearAuthState();
+    window.location.href = '/login';
+  }
+}
+
+function roleOptions(selected) {
+  return ROLES.map(role => `<option value="${role}" ${role === selected ? 'selected' : ''}>${role}</option>`).join('');
+}
+
+function renderUsers(users) {
+  const list = document.getElementById('user-list');
+  if (!users.length) {
+    list.innerHTML = '<div class="empty">No users match this search.</div>';
+    return;
+  }
+  list.innerHTML = users.map(user => `
+    <div class="user-row" data-user-id="${escHtml(user.id)}">
+      <div>
+        <div class="user-name">${escHtml(user.name)}</div>
+        <div class="user-email">${escHtml(user.email)}</div>
+        <div class="user-meta">Created ${escHtml((user.created_at || '').slice(0, 19))}</div>
+      </div>
+      <select class="input" data-field="role">${roleOptions(user.role)}</select>
+      <label style="display:flex;gap:8px;align-items:center;font-size:0.8rem;color:var(--mid);text-transform:none;letter-spacing:0">
+        <input type="checkbox" data-field="is_active" ${user.is_active ? 'checked' : ''}>
+        <span class="status-pill">${user.is_active ? 'Active' : 'Inactive'}</span>
+      </label>
+      <label style="display:flex;gap:8px;align-items:center;font-size:0.8rem;color:var(--mid);text-transform:none;letter-spacing:0">
+        <input type="checkbox" data-field="is_paid" ${user.is_paid ? 'checked' : ''}>
+        <span class="status-pill">${user.is_paid ? 'Paid' : 'Free'}</span>
+      </label>
+      <button class="btn" type="button" onclick="saveUser('${escHtml(user.id)}')">Save</button>
+    </div>
+  `).join('');
+}
+
+async function loadUsers() {
+  setStatus('Loading users...');
+  const params = new URLSearchParams();
+  const search = document.getElementById('search').value.trim();
+  const role = document.getElementById('role').value;
+  const active = document.getElementById('active').value;
+  const sort = document.getElementById('user-sort').value;
+  if (search) params.set('search', search);
+  if (role) params.set('role', role);
+  if (active) params.set('active', active);
+  params.set('sort', sort);
+  params.set('page', userPage);
+  params.set('per_page', PAGE_SIZE);
+  try {
+    const data = await fetchJson(`/api/admin/users?${params.toString()}`);
+    userTotal = data.total || 0;
+    userPage = data.page || userPage;
+    renderUsers(data.users || []);
+    document.getElementById('user-page-info').textContent =
+      `Page ${userPage} of ${Math.max(1, Math.ceil(userTotal / PAGE_SIZE))} - ${userTotal} users`;
+    setStatus('');
+  } catch (err) {
+    setStatus(err.message || 'Could not load users.', true);
+  }
+}
+
+function changeUserPage(delta) {
+  const maxPage = Math.max(1, Math.ceil(userTotal / PAGE_SIZE));
+  userPage = Math.min(maxPage, Math.max(1, userPage + delta));
+  loadUsers();
+}
+
+async function saveUser(userId) {
+  const row = document.querySelector(`[data-user-id="${CSS.escape(userId)}"]`);
+  if (!row) return;
+  const role = row.querySelector('[data-field="role"]').value;
+  const isActive = row.querySelector('[data-field="is_active"]').checked;
+  const isPaid = row.querySelector('[data-field="is_paid"]').checked;
+  setStatus('Saving user...');
+  try {
+    await fetchJson(`/api/admin/users/${encodeURIComponent(userId)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role, is_active: isActive, is_paid: isPaid })
+    });
+    await Promise.all([loadUsers(), loadAuditLogs()]);
+    setStatus('User updated.');
+  } catch (err) {
+    setStatus(err.message || 'Could not update user.', true);
+  }
+}
+
+function renderAuditLogs(rows) {
+  const list = document.getElementById('audit-list');
+  if (!rows.length) {
+    list.innerHTML = '<div class="empty">No audit events yet.</div>';
+    return;
+  }
+  list.innerHTML = rows.map(row => `
+    <div class="audit-row">
+      <div class="audit-action">${escHtml(row.action)}</div>
+      <div class="audit-meta">${escHtml(row.resource_type)} ${escHtml(row.resource_id || '')} by ${escHtml(row.user_email || 'system')} at ${escHtml((row.timestamp || '').slice(0, 19))}</div>
+    </div>
+  `).join('');
+}
+
+async function loadAuditLogs() {
+  try {
+    const params = new URLSearchParams();
+    const search = document.getElementById('audit-search').value.trim();
+    const resourceType = document.getElementById('audit-resource').value;
+    const action = document.getElementById('audit-action').value.trim();
+    const sort = document.getElementById('audit-sort').value;
+    if (search) params.set('search', search);
+    if (resourceType) params.set('resource_type', resourceType);
+    if (action) params.set('action', action);
+    params.set('sort', sort);
+    params.set('page', auditPage);
+    params.set('per_page', PAGE_SIZE);
+    const data = await fetchJson(`/api/admin/audit-logs?${params.toString()}`);
+    auditTotal = data.total || 0;
+    auditPage = data.page || auditPage;
+    renderAuditLogs(data.audit_logs || []);
+    document.getElementById('audit-page-info').textContent =
+      `Page ${auditPage} of ${Math.max(1, Math.ceil(auditTotal / PAGE_SIZE))} - ${auditTotal} events`;
+  } catch (err) {
+    document.getElementById('audit-list').innerHTML = `<div class="empty">${escHtml(err.message || 'Could not load audit history.')}</div>`;
+  }
+}
+
+function changeAuditPage(delta) {
+  const maxPage = Math.max(1, Math.ceil(auditTotal / PAGE_SIZE));
+  auditPage = Math.min(maxPage, Math.max(1, auditPage + delta));
+  loadAuditLogs();
+}
+
+async function bootstrap() {
+  try {
+    await fetchJson('/api/auth/me');
+    await Promise.all([loadUsers(), loadAuditLogs()]);
+  } catch (err) {
+    setStatus(err.message || 'User management unavailable.', true);
+  }
+}
+
+document.getElementById('search').addEventListener('keydown', event => {
+  if (event.key === 'Enter') { userPage = 1; loadUsers(); }
+});
+document.getElementById('audit-search').addEventListener('keydown', event => {
+  if (event.key === 'Enter') { auditPage = 1; loadAuditLogs(); }
+});
+document.addEventListener('DOMContentLoaded', bootstrap);
+</script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+[Unit]
+Description=CommonSource Flask API
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/commonsource/Project/app
+EnvironmentFile=/opt/commonsource/Project/.env.demo
+ExecStart=/opt/commonsource/.venv/bin/python search_api.py
+Restart=always
+RestartSec=5
+User=commonsource
+Group=commonsource
+
+[Install]
+WantedBy=multi-user.target

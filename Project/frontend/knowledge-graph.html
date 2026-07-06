@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Knowledge Graph - CommonSource</title>
+<script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root { --red:#C0271F; --dark:#1A1A1A; --mid:#4A4A4A; --light:#8A8A8A; --rule:#E0DDD8; --bg:#F7F6F2; --white:#FFFFFF; --serif:Georgia,'Times New Roman',serif; --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; }
+body { font-family: var(--sans); background: var(--bg); color: var(--dark); min-height: 100vh; }
+header { background: var(--dark); border-bottom: 3px solid var(--red); padding: 0 24px; }
+.header-inner { max-width: 1180px; margin: 0 auto; padding: 22px 0; display: flex; justify-content: space-between; align-items: center; gap: 14px; }
+.logo { font-family: var(--serif); font-size: 1.5rem; font-weight: 700; color: var(--white); text-decoration: none; }
+.logo span { color: var(--red); }
+.nav { display: flex; gap: 8px; flex-wrap: wrap; }
+.nav a, .nav button { color: #CCC; background: transparent; border: 1px solid #444; border-radius: 4px; padding: 7px 10px; font-size: 0.76rem; text-decoration: none; cursor: pointer; }
+main { max-width: 1180px; margin: 0 auto; padding: 28px 24px 60px; }
+.toolbar { background: var(--white); border: 1px solid var(--rule); border-radius: 4px; padding: 14px; display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; margin-bottom: 14px; }
+.input { border: 1px solid var(--rule); border-radius: 4px; background: var(--bg); color: var(--dark); font: inherit; padding: 10px 12px; min-width: 0; }
+.btn { border: 0; border-radius: 4px; background: var(--red); color: var(--white); cursor: pointer; font-weight: 800; padding: 10px 16px; }
+.btn:disabled { background: #CCC; cursor: wait; }
+.layout { display: grid; grid-template-columns: minmax(0,1fr) 300px; gap: 14px; align-items: stretch; min-height: 650px; }
+#graph { background: var(--white); border: 1px solid var(--rule); border-radius: 4px; min-height: 650px; }
+.panel { background: var(--white); border: 1px solid var(--rule); border-radius: 4px; padding: 16px; }
+.panel h1 { font-family: var(--serif); font-size: 1.35rem; margin-bottom: 8px; }
+.panel h2 { font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; margin: 18px 0 10px; }
+.muted { color: var(--mid); font-size: 0.88rem; line-height: 1.6; }
+.status { color: var(--light); font-size: 0.8rem; min-height: 20px; margin-top: 8px; }
+.status.error { color: var(--red); }
+.chip { display: inline-block; border: 1px solid var(--rule); border-radius: 999px; padding: 5px 9px; font-size: 0.76rem; background: var(--bg); margin: 0 6px 6px 0; text-decoration:none; color:var(--dark); }
+.chip:hover { border-color: var(--red); color: var(--red); }
+@media (max-width: 840px) {
+  header { padding: 0 18px; }
+  .header-inner { align-items: flex-start; flex-direction: column; }
+  main { padding: 20px 14px 44px; }
+  .toolbar, .layout { grid-template-columns: 1fr; }
+  #graph { min-height: 520px; }
+}
+</style>
+<link rel="stylesheet" href="/theme.css">
+</head>
+<body>
+<header>
+  <div class="header-inner">
+    <a class="logo" href="/search">Common<span>Source</span></a>
+    <nav class="nav" data-role-nav></nav>
+  </div>
+</header>
+<main>
+  <div class="toolbar">
+    <input class="input" id="topic-input" placeholder="Topic, e.g. water, malaria, governance">
+    <input class="input" id="entity-input" placeholder="Entity id or name">
+    <button class="btn" id="load-btn" type="button">Load Graph</button>
+  </div>
+  <div class="layout">
+    <div id="graph"></div>
+    <aside class="panel">
+      <h1>Knowledge Graph</h1>
+      <p class="muted">Explore entity relationships. Zoom, pan, and click a node to inspect or open its entity page.</p>
+      <div class="status" id="status"></div>
+      <h2>Selected Node</h2>
+      <div id="selected"><p class="muted">No node selected.</p></div>
+      <h2>Legend</h2>
+      <span class="chip">Disease</span>
+      <span class="chip">Program</span>
+      <span class="chip">Organization</span>
+      <span class="chip">Location</span>
+      <span class="chip">Topic</span>
+    </aside>
+  </div>
+</main>
+<script src="/common-nav.js"></script>
+<script>
+const API = window.location.protocol === 'file:' ? 'http://localhost:5050' : '';
+let network = null;
+let graphData = { nodes: [], edges: [] };
+
+function escHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[c]));
+}
+
+function setStatus(message, isError = false) {
+  const el = document.getElementById('status');
+  el.textContent = message || '';
+  el.classList.toggle('error', Boolean(isError));
+}
+
+function nodeColor(type) {
+  const colors = {
+    Disease: '#C0271F',
+    Program: '#1A6B8A',
+    'Government Scheme': '#6D4C9F',
+    Organization: '#2E7D4F',
+    Location: '#A56A22',
+    Person: '#7A4CA0',
+    Campaign: '#B8620A',
+    Topic: '#4A4A4A'
+  };
+  return colors[type] || '#4A4A4A';
+}
+
+async function getJson(path) {
+  const res = await fetch(`${API}${path}`);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
+  return data;
+}
+
+function renderSelected(node) {
+  if (!node) {
+    document.getElementById('selected').innerHTML = '<p class="muted">No node selected.</p>';
+    return;
+  }
+  document.getElementById('selected').innerHTML = `
+    <p class="muted"><strong>${escHtml(node.label)}</strong></p>
+    <p class="muted">${escHtml(node.group || 'Entity')}</p>
+    <a class="chip" href="/entity/${encodeURIComponent(node.id)}">Open entity</a>`;
+}
+
+function renderGraph(data) {
+  graphData = data;
+  if (!window.vis) {
+    setStatus('Graph library could not load. Check internet access for the CDN.', true);
+    return;
+  }
+  const nodes = new vis.DataSet((data.nodes || []).map(node => ({
+    id: node.id,
+    label: node.name,
+    group: node.entity_type,
+    color: nodeColor(node.entity_type),
+    font: { color: '#1A1A1A', face: 'Segoe UI' },
+    shape: 'dot',
+    size: 14 + Math.min(16, (node.article_count || 0) / 20)
+  })));
+  const edges = new vis.DataSet((data.edges || []).map((edge, index) => ({
+    id: index,
+    from: edge.source,
+    to: edge.target,
+    label: edge.relationship_type,
+    width: Math.max(1, (edge.weight || 0.3) * 3),
+    color: { color: '#B8B2AA', highlight: '#C0271F' },
+    font: { size: 10, color: '#8A8A8A' },
+    arrows: { to: { enabled: false } }
+  })));
+  network = new vis.Network(document.getElementById('graph'), { nodes, edges }, {
+    interaction: { hover: true, navigationButtons: true, keyboard: true },
+    physics: { stabilization: true, barnesHut: { gravitationalConstant: -2400, springLength: 130 } },
+    nodes: { borderWidth: 2 },
+    edges: { smooth: { type: 'dynamic' } }
+  });
+  network.on('click', params => {
+    const nodeId = params.nodes?.[0];
+    const node = nodeId ? nodes.get(nodeId) : null;
+    renderSelected(node);
+  });
+  network.on('doubleClick', params => {
+    const nodeId = params.nodes?.[0];
+    if (nodeId) window.location.href = `/entity/${encodeURIComponent(nodeId)}`;
+  });
+}
+
+async function loadGraph() {
+  const topic = document.getElementById('topic-input').value.trim();
+  const entity = document.getElementById('entity-input').value.trim();
+  const params = new URLSearchParams({ limit: '90' });
+  if (entity) params.set('entity', entity);
+  else if (topic) params.set('topic', topic);
+  setStatus('Loading graph...');
+  document.getElementById('load-btn').disabled = true;
+  try {
+    const data = await getJson(`/api/knowledge/graph?${params.toString()}`);
+    renderGraph(data);
+    setStatus(`${(data.nodes || []).length} nodes, ${(data.edges || []).length} edges`);
+  } catch (err) {
+    setStatus(err.message || 'Could not load graph.', true);
+  } finally {
+    document.getElementById('load-btn').disabled = false;
+  }
+}
+
+document.getElementById('load-btn').addEventListener('click', loadGraph);
+document.getElementById('topic-input').addEventListener('keydown', event => {
+  if (event.key === 'Enter') loadGraph();
+});
+document.getElementById('entity-input').addEventListener('keydown', event => {
+  if (event.key === 'Enter') loadGraph();
+});
+loadGraph();
+</script>
+</body>
+</html>

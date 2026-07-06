@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trending Topics - CommonSource</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root { --red:#C0271F; --dark:#1A1A1A; --mid:#4A4A4A; --light:#8A8A8A; --rule:#E0DDD8; --bg:#F7F6F2; --white:#FFFFFF; --serif:Georgia,'Times New Roman',serif; --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; }
+body { font-family: var(--sans); background: var(--bg); color: var(--dark); min-height: 100vh; }
+header { background: var(--dark); border-bottom: 3px solid var(--red); padding: 0 24px; }
+.header-inner { max-width: 960px; margin: 0 auto; padding: 22px 0; display: flex; justify-content: space-between; align-items: center; }
+.logo { font-family: var(--serif); font-size: 1.5rem; font-weight: 700; color: var(--white); text-decoration: none; }
+.logo span { color: var(--red); }
+.nav a { color: #CCC; border: 1px solid #444; border-radius: 4px; padding: 7px 10px; font-size: 0.76rem; text-decoration: none; }
+main { max-width: 960px; margin: 0 auto; padding: 32px 24px 72px; }
+h1 { font-family: var(--serif); font-size: 1.8rem; margin-bottom: 8px; }
+.muted { color: var(--mid); font-size: 0.86rem; line-height: 1.55; }
+.status { min-height: 22px; color: var(--light); font-size: 0.8rem; margin: 14px 0; }
+.status.error { color: var(--red); }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+.panel { background: var(--white); border: 1px solid var(--rule); border-radius: 4px; padding: 16px; }
+.panel h2 { font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 12px; }
+.item { border-bottom: 1px solid var(--rule); padding: 12px 0; }
+.item:last-child { border-bottom: 0; }
+.item a { color: var(--dark); text-decoration: none; font-weight: 700; }
+.badge { float:right; color: var(--light); font-size:0.76rem; }
+.empty { color: var(--light); font-size: 0.84rem; padding: 12px 0; }
+@media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+</style>
+<link rel="stylesheet" href="/theme.css">
+</head>
+<body>
+<header><div class="header-inner"><a class="logo" href="/search">Common<span>Source</span></a><nav class="nav"><a href="/search">Archive</a></nav></div></header>
+<main>
+  <h1>Trending Topics</h1>
+  <p class="muted">Tag and entity trends generated from the indexed CommonSource corpus.</p>
+  <div class="status" id="status"></div>
+  <div class="grid">
+    <section class="panel"><h2>Topics & Tags</h2><div id="topics"><div class="empty">Loading...</div></div></section>
+    <section class="panel"><h2>Entities</h2><div id="entities"><div class="empty">Loading...</div></div></section>
+  </div>
+</main>
+<script>
+const API = window.location.protocol === 'file:' ? 'http://localhost:5050' : '';
+function escHtml(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function setStatus(m,e=false){const el=document.getElementById('status');el.textContent=m||'';el.classList.toggle('error',!!e);}
+async function getJson(path){const res=await fetch(`${API}${path}`);const data=await res.json().catch(()=>({}));if(!res.ok||data.error)throw new Error(data.error||`HTTP ${res.status}`);return data;}
+async function load(){setStatus('Loading trends...');try{const data=await getJson('/api/trending/topics');document.getElementById('topics').innerHTML=data.topics.length?data.topics.map(t=>`<div class="item"><a href="/tag/${encodeURIComponent(t.slug)}">${escHtml(t.name)}</a><span class="badge">${escHtml(t.article_count)} articles</span></div>`).join(''):'<div class="empty">No trending topics yet.</div>';document.getElementById('entities').innerHTML=data.entities.length?data.entities.map(e=>`<div class="item"><a href="/entity/${encodeURIComponent(e.id)}">${escHtml(e.name)}</a><span class="badge">${escHtml(e.entity_type)} Â· ${escHtml(e.article_count)}</span></div>`).join(''):'<div class="empty">No trending entities yet.</div>';setStatus('');}catch(err){setStatus(err.message||'Could not load trends.',true);}}
+document.addEventListener('DOMContentLoaded',load);
+</script>
+</body>
+</html>

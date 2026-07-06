@@ -1,0 +1,3985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CommonSource — Local journalism, made findable</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --red:    #C0271F;
+    --dark:   #1A1A1A;
+    --mid:    #4A4A4A;
+    --light:  #8A8A8A;
+    --rule:   #E0DDD8;
+    --bg:     #F7F6F2;
+    --white:  #FFFFFF;
+    --card:   #FFFFFF;
+    --accent: #FFF8F0;
+    --serif:  'Georgia', 'Times New Roman', serif;
+    --sans:   -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
+  html { font-size: 16px; }
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--dark);
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  header {
+    background: var(--dark);
+    border-bottom: 3px solid var(--red);
+    padding: 0 24px;
+  }
+  .header-inner {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 28px 0 22px;
+    display: flex;
+    align-items: flex-end;
+    gap: 20px;
+    justify-content: space-between;
+  }
+  .masthead { display: flex; flex-direction: column; gap: 6px; }
+  .logo {
+    font-family: var(--serif);
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--white);
+    letter-spacing: -0.5px;
+  }
+  .logo span { color: var(--red); }
+  .tagline {
+    font-size: 0.78rem;
+    color: #A0A0A0;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .corpus-badge {
+    font-size: 0.72rem;
+    color: #888;
+    text-align: right;
+    line-height: 1.5;
+  }
+  .corpus-badge strong { color: #CCC; }
+  .user-menu {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-wrap: wrap;
+    color: #AAA;
+    font-size: 0.72rem;
+  }
+  .user-link,
+  .user-logout {
+    color: #CCC;
+    text-decoration: none;
+    background: transparent;
+    border: 1px solid #444;
+    border-radius: 4px;
+    padding: 6px 9px;
+    font-family: var(--sans);
+    font-size: 0.72rem;
+    cursor: pointer;
+  }
+  .user-link:hover,
+  .user-logout:hover { border-color: #777; color: var(--white); }
+  .user-chip {
+    max-width: 210px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .user-chip strong { color: #EEE; }
+  .auth-icon-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 38px;
+    min-height: 38px;
+  }
+  .auth-icon-link svg {
+    width: 18px;
+    height: 18px;
+    stroke-width: 2.3;
+  }
+
+  /* ── Search section ── */
+  .search-section {
+    background: var(--white);
+    border-bottom: 1px solid var(--rule);
+    padding: 28px 24px;
+  }
+  .search-inner { max-width: 860px; margin: 0 auto; }
+  .search-form {
+    display: flex;
+    gap: 10px;
+    align-items: stretch;
+  }
+  .search-input {
+    flex: 1;
+    font-family: var(--sans);
+    font-size: 1rem;
+    padding: 12px 18px;
+    border: 2px solid var(--rule);
+    border-radius: 4px;
+    outline: none;
+    color: var(--dark);
+    background: var(--bg);
+    transition: border-color 0.15s;
+  }
+  .search-input:focus { border-color: var(--red); background: var(--white); }
+  .search-input::placeholder { color: var(--light); }
+  .search-btn {
+    font-family: var(--sans);
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 12px 28px;
+    background: var(--red);
+    color: var(--white);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    letter-spacing: 0.03em;
+    transition: background 0.15s;
+    white-space: nowrap;
+  }
+  .search-btn:hover { background: #A01E17; }
+  .search-btn:disabled { background: #CCC; cursor: not-allowed; }
+
+  .search-hint {
+    margin-top: 10px;
+    font-size: 0.78rem;
+    color: var(--light);
+  }
+  .search-hint a {
+    color: var(--light);
+    text-decoration: none;
+    border-bottom: 1px dotted var(--light);
+    cursor: pointer;
+  }
+  .search-hint a:hover { color: var(--mid); }
+  .translate-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  .translate-select {
+    font-family: var(--sans);
+    font-size: 0.78rem;
+    color: var(--mid);
+    border: 1px solid var(--rule);
+    background: var(--bg);
+    border-radius: 4px;
+    padding: 8px 10px;
+  }
+  .translate-btn {
+    font-family: var(--sans);
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--dark);
+    border: 1px solid var(--rule);
+    background: var(--white);
+    border-radius: 4px;
+    padding: 8px 12px;
+    cursor: pointer;
+  }
+  .filter-controls {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .filter-input {
+    font-family: var(--sans);
+    font-size: 0.76rem;
+    color: var(--mid);
+    border: 1px solid var(--rule);
+    background: var(--bg);
+    border-radius: 4px;
+    padding: 8px 10px;
+    min-width: 0;
+  }
+  .translate-btn:hover { border-color: var(--red); color: var(--red); }
+  .translate-btn:disabled { color: var(--light); cursor: not-allowed; border-color: var(--rule); }
+  .translation-mark {
+    font-size: 0.72rem;
+    color: var(--light);
+  }
+
+  /* ── Main ── */
+  main {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 32px 24px 80px;
+  }
+
+  /* ── Status bar ── */
+  .status {
+    font-size: 0.8rem;
+    color: var(--light);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 22px;
+  }
+  .status.loading { color: var(--mid); }
+  .status.error   { color: var(--red); }
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+  }
+
+  /* ── AI Answer panel ── */
+  /* ── Evidence layer colours ── */
+  :root {
+    --layer-news:   #C0271F;
+    --layer-dev:    #1A6B8A;
+    --layer-comm:   #B8620A;
+    --layer-off:    #3A3A3A;
+    --layer-gaps:   #5C3D8F;
+  }
+
+  /* Colour-coded layer cards — all visible, stacked in chat space */
+  .layer-card {
+    border-radius: 4px;
+    border: 1px solid var(--rule);
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .layer-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .layer-pip {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .layer-card[data-layer="news"]        .layer-pip { background: var(--layer-news); }
+  .layer-card[data-layer="development"] .layer-pip { background: var(--layer-dev);  }
+  .layer-card[data-layer="community"]   .layer-pip { background: var(--layer-comm); }
+  .layer-card[data-layer="official"]    .layer-pip { background: var(--layer-off);  }
+  .layer-card[data-layer="gaps"]        .layer-pip { background: var(--layer-gaps); }
+
+  .layer-card[data-layer="news"]        { border-left: 3px solid var(--layer-news); }
+  .layer-card[data-layer="development"] { border-left: 3px solid var(--layer-dev);  }
+  .layer-card[data-layer="community"]   { border-left: 3px solid var(--layer-comm); }
+  .layer-card[data-layer="official"]    { border-left: 3px solid var(--layer-off);  }
+  .layer-card[data-layer="gaps"]        { border-left: 3px solid var(--layer-gaps); }
+
+  .layer-card-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .layer-card[data-layer="news"]        .layer-card-label { color: var(--layer-news); }
+  .layer-card[data-layer="development"] .layer-card-label { color: var(--layer-dev);  }
+  .layer-card[data-layer="community"]   .layer-card-label { color: var(--layer-comm); }
+  .layer-card[data-layer="official"]    .layer-card-label { color: var(--layer-off);  }
+  .layer-card[data-layer="gaps"]        .layer-card-label { color: var(--layer-gaps); }
+
+  .layer-card-desc {
+    font-size: 0.75rem;
+    color: var(--light);
+    margin-left: auto;
+  }
+  .layer-chevron {
+    margin-left: auto;
+    font-size: 0.75rem;
+    color: var(--light);
+    transition: transform 0.15s;
+  }
+  .layer-card.collapsed .layer-chevron { transform: rotate(-90deg); }
+
+  .layer-card-body {
+    padding: 0 16px 16px;
+    border-top: 1px solid var(--rule);
+  }
+  .layer-card.collapsed .layer-card-body { display: none; }
+
+  .layer-summary {
+    font-family: var(--serif);
+    font-size: 0.96rem;
+    line-height: 1.78;
+    color: var(--dark);
+    margin: 14px 0;
+  }
+  .layer-summary sup {
+    font-size: 0.65rem;
+    font-family: var(--sans);
+    font-weight: 700;
+  }
+  .layer-card[data-layer="news"]        .layer-summary sup { color: var(--layer-news); }
+  .layer-card[data-layer="development"] .layer-summary sup { color: var(--layer-dev);  }
+  .layer-card[data-layer="community"]   .layer-summary sup { color: var(--layer-comm); }
+  .layer-card[data-layer="official"]    .layer-summary sup { color: var(--layer-off);  }
+  .layer-card[data-layer="gaps"]        .layer-summary sup { color: var(--layer-gaps); }
+
+  .gaps-text {
+    font-family: var(--serif);
+    font-size: 0.95rem;
+    line-height: 1.8;
+    color: var(--dark);
+    white-space: pre-wrap;
+    margin: 14px 0;
+  }
+  .gaps-text strong {
+    display: block;
+    font-family: var(--sans);
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: var(--layer-gaps);
+    margin: 14px 0 4px;
+  }
+
+  /* Source break-up table */
+  .source-breakup {
+    margin-top: 16px;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    overflow: hidden;
+    font-size: 0.82rem;
+  }
+  .breakup-header {
+    display: grid;
+    grid-template-columns: 120px 1fr 70px 90px 90px;
+    gap: 0;
+    background: var(--bg);
+    border-bottom: 1px solid var(--rule);
+    padding: 8px 12px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--light);
+  }
+  .breakup-row {
+    display: grid;
+    grid-template-columns: 120px 1fr 70px 90px 90px;
+    gap: 0;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--rule);
+    align-items: start;
+    transition: background 0.1s;
+  }
+  .breakup-row:last-child { border-bottom: none; }
+  .breakup-row:hover { background: var(--bg); }
+  .breakup-cell { padding-right: 12px; color: var(--mid); line-height: 1.4; }
+  .breakup-cell.pub { font-weight: 600; color: var(--dark); }
+  .breakup-cell.what { font-family: var(--serif); color: var(--dark); font-size: 0.83rem; }
+  .breakup-cell.conf { color: var(--light); font-size: 0.78rem; }
+  .conf-bar { height: 4px; border-radius: 2px; background: var(--rule); margin-top: 4px; }
+  .conf-fill { height: 100%; border-radius: 2px; background: var(--red); }
+  .breakup-cell a { color: var(--red); text-decoration: none; }
+  .breakup-cell a:hover { text-decoration: underline; }
+
+  .ai-answer {
+    background: var(--white);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--red);
+    border-radius: 4px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+  }
+  .ai-answer-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .ai-label-text {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--red);
+  }
+  .ai-model-badge {
+    font-size: 0.68rem;
+    color: var(--light);
+    background: var(--bg);
+    padding: 2px 8px;
+    border-radius: 10px;
+    border: 1px solid var(--rule);
+  }
+  .ai-answer-text {
+    font-family: var(--serif);
+    font-size: 0.97rem;
+    line-height: 1.75;
+    color: var(--dark);
+  }
+  .ai-answer-text sup {
+    color: var(--red);
+    font-size: 0.65rem;
+    font-family: var(--sans);
+    font-weight: 700;
+    cursor: default;
+  }
+  .ai-caveat {
+    margin-top: 10px;
+    font-size: 0.72rem;
+    color: var(--light);
+    font-style: italic;
+  }
+  .sources-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--light);
+    margin-bottom: 10px;
+    margin-top: 20px;
+  }
+
+  /* ── Entity tags ── */
+  .entities-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 14px 0 4px;
+    align-items: center;
+  }
+  .entity-group-label {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--light);
+    margin-right: 2px;
+  }
+  .entity-tag {
+    font-size: 0.78rem;
+    padding: 4px 11px;
+    border-radius: 14px;
+    cursor: pointer;
+    border: 1px solid;
+    transition: all 0.12s;
+    white-space: nowrap;
+  }
+  .entity-tag.person {
+    color: #5B3A8E; border-color: #D4C4F0; background: #F5F0FF;
+  }
+  .entity-tag.person:hover { background: #D4C4F0; }
+  .entity-tag.org {
+    color: #1A6B3C; border-color: #B3DEC8; background: #F0FAF4;
+  }
+  .entity-tag.org:hover { background: #B3DEC8; }
+  .entity-tag.place {
+    color: #8B4513; border-color: #DEB887; background: #FFF8F0;
+  }
+  .entity-tag.place:hover { background: #DEB887; }
+
+  /* ── Timeline chart ── */
+  .timeline-panel {
+    background: var(--white);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 18px 24px 14px;
+    margin-bottom: 16px;
+  }
+  .timeline-header {
+    margin-bottom: 6px;
+  }
+  .timeline-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--light);
+    display: block;
+  }
+  .timeline-total {
+    font-size: 0.72rem;
+    color: var(--light);
+    display: block;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .timeline-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    min-height: 88px;
+    padding-top: 22px;
+    box-sizing: border-box;
+  }
+  .tbar-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
+    position: relative;
+    cursor: pointer;
+  }
+  .tbar-wrap:hover .tbar { background: var(--red); }
+  .tbar {
+    width: 100%;
+    background: #D0CCC5;
+    border-radius: 2px 2px 0 0;
+    transition: background 0.12s;
+    min-height: 3px;
+  }
+  .tbar-year {
+    font-size: 0.62rem;
+    color: var(--light);
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    height: 28px;
+    display: flex;
+    align-items: center;
+  }
+  .tbar-count {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.65rem;
+    color: var(--mid);
+    font-weight: 600;
+    white-space: nowrap;
+    line-height: 1;
+  }
+
+  /* ── Story arc ── */
+  .arc-panel {
+    background: var(--accent);
+    border: 1px solid #F0E8D8;
+    border-left: 3px solid #C8860A;
+    border-radius: 4px;
+    padding: 20px 24px;
+    margin-bottom: 16px;
+  }
+  .arc-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .arc-label-left {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .arc-label-text {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #C8860A;
+  }
+  .arc-btn {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--red);
+    background: none;
+    border: 1px solid var(--red);
+    border-radius: 14px;
+    padding: 4px 14px;
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+  .arc-btn:hover { background: var(--red); color: var(--white); }
+  .arc-btn:disabled { color: var(--light); border-color: var(--rule); cursor: wait; }
+  .arc-narrative {
+    font-family: var(--serif);
+    font-size: 0.95rem;
+    line-height: 1.8;
+    color: var(--dark);
+  }
+  .arc-narrative sup {
+    color: #C8860A;
+    font-size: 0.65rem;
+    font-family: var(--sans);
+    font-weight: 700;
+  }
+  .arc-placeholder {
+    font-size: 0.82rem;
+    color: var(--light);
+    font-style: italic;
+  }
+
+  /* ── Results ── */
+  .results { display: flex; flex-direction: column; gap: 1px; }
+
+  .result-card {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 20px 24px;
+    transition: border-color 0.12s;
+  }
+  .result-card:hover { border-color: #C8C5BE; }
+  .result-card-clickable { cursor: pointer; }
+  .result-card-clickable:hover .result-title { color: var(--red); }
+
+  .cited-source-card {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  .cited-source-num {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--red);
+    min-width: 24px;
+    padding-top: 2px;
+    flex-shrink: 0;
+  }
+  .cited-source-body { flex: 1; min-width: 0; }
+
+  .result-provenance {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+  .pub-name {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--red);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .prov-sep {
+    color: var(--rule);
+    margin: 0 8px;
+    font-size: 0.8rem;
+  }
+  .prov-author {
+    font-size: 0.78rem;
+    color: var(--mid);
+    font-weight: 500;
+  }
+  .prov-date {
+    font-size: 0.75rem;
+    color: var(--light);
+  }
+  .prov-location {
+    font-size: 0.75rem;
+    color: var(--light);
+  }
+  .prov-location::before { content: "·"; margin-right: 6px; color: var(--rule); }
+  .prov-tag {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--mid);
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    padding: 2px 7px;
+    margin-left: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .result-title {
+    font-family: var(--serif);
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 8px;
+    line-height: 1.35;
+  }
+
+  .result-excerpt {
+    font-size: 0.875rem;
+    color: var(--mid);
+    line-height: 1.65;
+    margin-bottom: 12px;
+  }
+
+  .result-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .result-footer-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .result-link {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--red);
+    text-decoration: none;
+    letter-spacing: 0.02em;
+  }
+  .result-link:hover { text-decoration: underline; }
+  .result-link.no-url { color: var(--light); cursor: default; }
+  .open-document-btn {
+    background: transparent;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    color: var(--dark);
+    cursor: pointer;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    padding: 5px 10px;
+    text-transform: uppercase;
+  }
+  .open-document-btn:hover {
+    border-color: var(--red);
+    color: var(--red);
+  }
+  .bookmark-btn.saved {
+    border-color: var(--red);
+    color: var(--red);
+  }
+  .relevance-bar {
+    height: 3px;
+    background: var(--rule);
+    border-radius: 2px;
+    width: 60px;
+    overflow: hidden;
+  }
+  .relevance-fill {
+    height: 100%;
+    background: var(--red);
+    border-radius: 2px;
+    opacity: 0.4;
+  }
+
+  /* ── Empty state ── */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--light);
+  }
+  .empty-state h3 {
+    font-family: var(--serif);
+    font-size: 1.2rem;
+    color: var(--mid);
+    margin-bottom: 8px;
+  }
+  .empty-state p { font-size: 0.85rem; line-height: 1.6; }
+
+  /* ── Welcome state ── */
+  .welcome {
+    padding: 40px 0 0;
+  }
+  .welcome-intro {
+    font-family: var(--serif);
+    font-size: 1.1rem;
+    color: var(--mid);
+    line-height: 1.7;
+    margin-bottom: 36px;
+    max-width: 620px;
+  }
+  .welcome-intro strong { color: var(--dark); }
+
+  .suggested-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--light);
+    margin-bottom: 12px;
+  }
+  .suggested-queries {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 40px;
+  }
+  .suggestion {
+    font-size: 0.83rem;
+    padding: 7px 14px;
+    border: 1px solid var(--rule);
+    border-radius: 20px;
+    cursor: pointer;
+    color: var(--mid);
+    background: var(--white);
+    transition: all 0.12s;
+  }
+  .suggestion:hover {
+    border-color: var(--red);
+    color: var(--red);
+    background: var(--accent);
+  }
+
+  .how-it-works {
+    border-top: 1px solid var(--rule);
+    padding-top: 36px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+  }
+  /* step block */
+  .hiw-number {
+    font-size: 1.8rem;
+    font-family: var(--serif);
+    color: var(--rule);
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .hiw-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 6px;
+  }
+  .hiw-desc {
+    font-size: 0.78rem;
+    color: var(--light);
+    line-height: 1.6;
+  }
+
+  /* ── Tabs ── */
+  .tab-nav {
+    background: var(--dark);
+    border-bottom: 1px solid #2A2A2A;
+  }
+  .tab-nav-inner {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    gap: 0;
+  }
+  .tab-btn {
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    padding: 12px 20px;
+    color: #888;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .tab-btn:hover { color: #CCC; }
+  .tab-btn.active { color: var(--white); border-bottom-color: var(--red); }
+  .tab-btn .tab-pill {
+    font-size: 0.6rem;
+    background: #3A3A3A;
+    color: #888;
+    padding: 2px 6px;
+    border-radius: 8px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+  .tab-btn.active .tab-pill { background: var(--red); color: var(--white); }
+
+  /* ── Language toggle ── */
+  .lang-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    border: 1px solid #3A3A3A;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-left: auto;
+  }
+  .lang-btn {
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 6px 12px;
+    background: none;
+    border: none;
+    color: #777;
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    transition: all 0.12s;
+  }
+  .lang-btn.active { background: var(--red); color: var(--white); }
+  .lang-btn:not(.active):hover { color: #CCC; }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ── Audio tab ── */
+  .audio-hero {
+    padding: 48px 0 32px;
+    max-width: 600px;
+  }
+  .audio-hero h2 {
+    font-family: var(--serif);
+    font-size: 1.6rem;
+    color: var(--dark);
+    margin-bottom: 14px;
+    line-height: 1.3;
+  }
+  .audio-hero p {
+    font-size: 0.9rem;
+    color: var(--mid);
+    line-height: 1.7;
+    margin-bottom: 24px;
+  }
+  .audio-formats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 36px;
+  }
+  .audio-format-tag {
+    font-size: 0.78rem;
+    padding: 6px 14px;
+    border: 1px solid var(--rule);
+    border-radius: 20px;
+    color: var(--mid);
+    background: var(--white);
+  }
+  .audio-stations {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 36px;
+  }
+  .station-card {
+    background: var(--white);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 14px 16px;
+  }
+  .station-name {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 4px;
+  }
+  .station-meta {
+    font-size: 0.72rem;
+    color: var(--light);
+    line-height: 1.4;
+  }
+  .audio-cta {
+    background: var(--dark);
+    color: var(--white);
+    border: none;
+    border-radius: 4px;
+    padding: 12px 24px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: var(--sans);
+  }
+  .audio-pipeline {
+    border-top: 1px solid var(--rule);
+    padding-top: 32px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    margin-top: 32px;
+  }
+  .pipeline-step {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .pipeline-arrow {
+    font-size: 1.2rem;
+    color: var(--rule);
+    display: flex;
+    align-items: center;
+    padding-top: 20px;
+  }
+  .pipeline-icon {
+    font-size: 1.4rem;
+    margin-bottom: 4px;
+  }
+  .pipeline-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--dark);
+  }
+  .pipeline-desc {
+    font-size: 0.72rem;
+    color: var(--light);
+    line-height: 1.5;
+  }
+
+  /* ── Script Writer ── */
+  .scriptwriter-wrap { padding: 32px 0 80px; }
+  .sw-intro {
+    max-width: 600px;
+    margin-bottom: 32px;
+  }
+  .sw-intro h2 {
+    font-family: var(--serif);
+    font-size: 1.5rem;
+    color: var(--dark);
+    margin-bottom: 10px;
+  }
+  .sw-intro p {
+    font-size: 0.88rem;
+    color: var(--mid);
+    line-height: 1.65;
+  }
+  .sw-layout {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+  .sw-config {
+    background: var(--white);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .sw-field { display: flex; flex-direction: column; gap: 8px; }
+  .sw-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--light);
+  }
+  .sw-options { display: flex; flex-wrap: wrap; gap: 6px; }
+  .sw-option {
+    font-size: 0.78rem;
+    padding: 5px 11px;
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    cursor: pointer;
+    color: var(--mid);
+    background: var(--bg);
+    transition: all 0.12s;
+  }
+  .sw-option:hover { border-color: var(--mid); }
+  .sw-option.active {
+    background: var(--dark);
+    border-color: var(--dark);
+    color: var(--white);
+  }
+  .sw-textarea {
+    font-family: var(--sans);
+    font-size: 0.85rem;
+    padding: 10px 12px;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    resize: vertical;
+    color: var(--dark);
+    background: var(--bg);
+    outline: none;
+    line-height: 1.5;
+  }
+  .sw-textarea:focus { border-color: var(--red); background: var(--white); }
+  .sw-start-btn {
+    font-family: var(--sans);
+    font-size: 0.88rem;
+    font-weight: 700;
+    padding: 11px 0;
+    background: var(--red);
+    color: var(--white);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.12s;
+  }
+  .sw-start-btn:hover { background: #A01E17; }
+  .sw-start-btn:disabled { background: #CCC; cursor: wait; }
+  .sw-chat {
+    background: var(--white);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    min-height: 480px;
+  }
+  .sw-chat-messages {
+    flex: 1;
+    padding: 20px 24px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-height: 520px;
+  }
+  .sw-welcome {
+    padding: 20px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .sw-welcome p { font-size: 0.87rem; color: var(--light); line-height: 1.65; }
+  .sw-welcome strong { color: var(--mid); }
+  .sw-msg {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-width: 90%;
+  }
+  .sw-msg.user { align-self: flex-end; }
+  .sw-msg.assistant { align-self: flex-start; }
+  .sw-msg-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .sw-msg.user .sw-msg-label { color: var(--light); text-align: right; }
+  .sw-msg.assistant .sw-msg-label { color: var(--red); }
+  .sw-msg-bubble {
+    font-size: 0.875rem;
+    line-height: 1.7;
+    padding: 12px 16px;
+    border-radius: 4px;
+    white-space: pre-wrap;
+  }
+  .sw-msg.user .sw-msg-bubble {
+    background: var(--dark);
+    color: var(--white);
+    border-radius: 4px 4px 0 4px;
+  }
+  .sw-msg.assistant .sw-msg-bubble {
+    background: var(--bg);
+    color: var(--dark);
+    border: 1px solid var(--rule);
+    border-radius: 4px 4px 4px 0;
+  }
+  .sw-sources-used {
+    margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .sw-source-chip {
+    font-size: 0.68rem;
+    padding: 3px 9px;
+    background: var(--accent);
+    border: 1px solid #F0E0C8;
+    border-radius: 10px;
+    color: #8B4513;
+    cursor: pointer;
+  }
+  .sw-source-chip:hover { background: #F0E0C8; }
+  .sw-input-row {
+    display: flex;
+    gap: 10px;
+    padding: 14px 16px;
+    border-top: 1px solid var(--rule);
+    align-items: flex-end;
+  }
+  .sw-reply-input {
+    flex: 1;
+    font-family: var(--sans);
+    font-size: 0.85rem;
+    padding: 10px 12px;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    resize: none;
+    outline: none;
+    color: var(--dark);
+    background: var(--bg);
+    line-height: 1.5;
+  }
+  .sw-reply-input:focus { border-color: var(--red); background: var(--white); }
+  .sw-send-btn {
+    font-family: var(--sans);
+    font-size: 0.82rem;
+    font-weight: 700;
+    padding: 10px 18px;
+    background: var(--red);
+    color: var(--white);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .sw-send-btn:hover { background: #A01E17; }
+  .sw-send-btn:disabled { background: #CCC; cursor: wait; }
+
+  /* Admin */
+  .admin-wrap { padding: 32px 0 80px; }
+  .admin-intro {
+    max-width: 620px;
+    margin-bottom: 24px;
+  }
+  .admin-intro h2 {
+    font-family: var(--serif);
+    font-size: 1.5rem;
+    color: var(--dark);
+    margin-bottom: 10px;
+  }
+  .admin-intro p {
+    font-size: 0.88rem;
+    color: var(--mid);
+    line-height: 1.65;
+  }
+  .admin-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+  .admin-panel {
+    background: var(--white);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 18px;
+  }
+  .admin-wide { grid-column: 1 / -1; }
+  .admin-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .admin-panel h3 {
+    font-size: 0.86rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--dark);
+  }
+  .admin-field { display: flex; flex-direction: column; gap: 7px; margin-bottom: 14px; }
+  .admin-field label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--light);
+  }
+  .admin-input {
+    width: 100%;
+    font-family: var(--sans);
+    font-size: 0.84rem;
+    padding: 10px 11px;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    background: var(--bg);
+    color: var(--dark);
+    outline: none;
+  }
+  .admin-input:focus { border-color: var(--red); background: var(--white); }
+  .admin-actions { display: flex; gap: 8px; align-items: center; }
+  .admin-btn {
+    font-family: var(--sans);
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 9px 14px;
+    background: var(--red);
+    color: var(--white);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .admin-btn.secondary {
+    background: var(--white);
+    color: var(--mid);
+    border: 1px solid var(--rule);
+  }
+  .admin-btn:disabled { background: #CCC; cursor: wait; }
+  .admin-status {
+    min-height: 22px;
+    font-size: 0.78rem;
+    color: var(--light);
+    margin-bottom: 16px;
+  }
+  .admin-status.error { color: var(--red); }
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .metric-tile {
+    background: var(--white);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 14px;
+  }
+  .metric-value {
+    font-family: var(--serif);
+    font-size: 1.45rem;
+    line-height: 1.1;
+    color: var(--dark);
+  }
+  .metric-label {
+    margin-top: 5px;
+    font-size: 0.68rem;
+    color: var(--light);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .publisher-list { display: flex; flex-direction: column; gap: 10px; }
+  .publisher-row {
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    background: var(--bg);
+    padding: 12px 14px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    align-items: center;
+  }
+  .publisher-name {
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 4px;
+  }
+  .publisher-meta {
+    font-size: 0.74rem;
+    color: var(--light);
+    line-height: 1.5;
+  }
+  .publisher-actions { display: flex; gap: 8px; }
+  .stats-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+  .stat-list { display: flex; flex-direction: column; gap: 8px; }
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    border-bottom: 1px solid var(--rule);
+    padding: 7px 0;
+    font-size: 0.82rem;
+  }
+  .stat-row span:first-child { color: var(--mid); }
+  .stat-row span:last-child { color: var(--dark); font-weight: 700; }
+  .feed-list { display: flex; flex-direction: column; gap: 10px; }
+  .feed-row {
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 12px 14px;
+    background: var(--bg);
+  }
+  .feed-title {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 4px;
+  }
+  .feed-meta {
+    font-size: 0.74rem;
+    color: var(--light);
+    line-height: 1.5;
+    word-break: break-word;
+  }
+  .feed-status {
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--red);
+    white-space: nowrap;
+  }
+  .feed-empty {
+    font-size: 0.82rem;
+    color: var(--light);
+    padding: 12px 0;
+  }
+  .upload-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    align-items: end;
+  }
+  .upload-grid .admin-field:first-child,
+  .upload-grid .admin-field:nth-child(2) {
+    grid-column: span 2;
+  }
+  .upload-status {
+    font-size: 0.78rem;
+    color: var(--light);
+    margin-top: 12px;
+    min-height: 20px;
+  }
+  .upload-status.error { color: var(--red); }
+  .upload-dropzone {
+    border: 1px dashed var(--rule);
+    border-radius: 6px;
+    padding: 16px;
+    margin: 14px 0;
+    background: var(--bg);
+    color: var(--light);
+    font-size: 0.82rem;
+    text-align: center;
+  }
+  .upload-dropzone.active {
+    border-color: var(--red);
+    color: var(--dark);
+    background: #FFF8F4;
+  }
+  .bulk-progress { margin-top: 12px; }
+  .bulk-progress-bar {
+    height: 8px;
+    background: var(--rule);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: 7px;
+  }
+  .bulk-progress-bar span {
+    display: block;
+    width: 0;
+    height: 100%;
+    background: var(--red);
+    transition: width 0.25s ease;
+  }
+  @media (max-width: 700px) {
+    .sw-layout { grid-template-columns: 1fr; }
+    .admin-layout { grid-template-columns: 1fr; }
+    .admin-wide { grid-column: auto; }
+    .dashboard-grid { grid-template-columns: 1fr 1fr; }
+    .publisher-row { grid-template-columns: 1fr; }
+    .publisher-actions { justify-content: flex-start; }
+    .stats-layout { grid-template-columns: 1fr; }
+    .upload-grid { grid-template-columns: 1fr; }
+    .upload-grid .admin-field:first-child,
+    .upload-grid .admin-field:nth-child(2) { grid-column: auto; }
+    .tab-nav-inner { overflow-x: auto; }
+    .audio-pipeline { grid-template-columns: 1fr 1fr; }
+  }
+
+  /* ── Footer ── */
+  footer {
+    border-top: 1px solid var(--rule);
+    padding: 20px 24px;
+    text-align: center;
+    font-size: 0.72rem;
+    color: var(--light);
+  }
+  footer strong { color: var(--mid); }
+
+  /* ── Loading spinner ── */
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner {
+    width: 14px; height: 14px;
+    border: 2px solid var(--rule);
+    border-top-color: var(--red);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 600px) {
+    .header-inner { flex-direction: column; align-items: flex-start; gap: 8px; }
+    .corpus-badge { text-align: left; }
+    .filter-controls { grid-template-columns: 1fr; }
+    .how-it-works { grid-template-columns: 1fr; gap: 20px; }
+    .logo { font-size: 1.6rem; }
+    main { padding: 24px 16px 60px; }
+  }
+</style>
+<link rel="stylesheet" href="/theme.css">
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="masthead">
+      <a class="logo" href="/" aria-label="CommonSource home">Common<span>Source</span></a>
+      <div class="tagline" data-i18n="tagline">Bringing the voice of community media to the world</div>
+    </div>
+    <div>
+      <div id="corpus-badge" style="display:none"></div>
+      <div class="user-menu" id="user-menu">
+        <a class="user-link auth-icon-link" id="login-link" href="/login" title="Login" aria-label="Login">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+            <path d="M10 17l5-5-5-5"/>
+            <path d="M15 12H3"/>
+          </svg>
+        </a>
+        <a class="user-link" id="register-link" href="/register">Register</a>
+        <a class="user-link" id="dashboard-link" href="/index.html" style="display:none">Dashboard</a>
+        <a class="user-link" id="profile-link" href="/profile" style="display:none">Profile</a>
+        <a class="user-link" id="publisher-link" href="/publisher/profile" style="display:none">Publisher</a>
+        <a class="user-link" id="user-admin-link" href="/users" style="display:none">Users</a>
+        <a class="user-link" id="publisher-applications-link" href="/admin/publisher-applications" style="display:none">Applications</a>
+        <a class="user-link" id="moderation-link" href="/moderation" style="display:none">Moderation</a>
+        <span class="user-chip" id="user-chip" style="display:none"></span>
+        <button class="user-logout auth-icon-link" id="logout-btn" type="button" onclick="logoutUser()" style="display:none" title="Logout" aria-label="Logout">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <path d="M16 17l5-5-5-5"/>
+            <path d="M21 12H9"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<nav class="tab-nav">
+  <div class="tab-nav-inner">
+    <button class="tab-btn active" id="tab-btn-articles" onclick="switchTab('articles', this)" data-i18n="tab_articles">
+      Search <span class="tab-pill" id="tab-article-count">—</span>
+    </button>
+    <button class="tab-btn" id="tab-btn-scriptwriter" onclick="switchTab('scriptwriter', this)" data-i18n="tab_scriptwriter">
+      Script Writer
+    </button>
+    <button class="tab-btn" id="tab-btn-stats" onclick="switchTab('stats', this)" data-i18n="tab_stats">
+      Stats
+    </button>
+    <button class="tab-btn" id="tab-btn-diagnostics" onclick="switchTab('diagnostics', this)" data-i18n="tab_diagnostics">
+      Diagnostics
+    </button>
+    <button class="tab-btn" id="tab-btn-health" onclick="switchTab('health', this)" data-i18n="tab_health">
+      Health
+    </button>
+    <button class="tab-btn" id="tab-btn-admin" onclick="switchTab('admin', this)" data-i18n="tab_admin">
+      Admin
+    </button>
+    <div class="lang-toggle" style="margin-left:auto; align-self:center;">
+      <button class="lang-btn active" id="lang-en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" id="lang-hi" onclick="setLang('hi')">हि</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ── Articles tab ── -->
+<div class="tab-panel active" id="tab-articles">
+  <div class="search-section">
+    <div class="search-inner">
+      <form class="search-form" id="search-form" onsubmit="return false;">
+        <input
+          type="text"
+          class="search-input"
+          id="search-input"
+          data-i18n-placeholder="search_placeholder"
+        placeholder="Search the archive…"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <button type="submit" class="search-btn" id="search-btn" onclick="doSearch()" data-i18n="search_btn">Search</button>
+      </form>
+      <div class="filter-controls" aria-label="Search filters">
+        <input class="filter-input" id="filter-tag" placeholder="Tag filter">
+        <input class="filter-input" id="filter-category" placeholder="Category filter">
+        <select class="filter-input" id="filter-language" aria-label="Language filter">
+          <option value="">All languages</option>
+          <option value="english">English</option>
+          <option value="hindi">Hindi</option>
+          <option value="bilingual">Bilingual</option>
+        </select>
+        <select class="filter-input" id="filter-document-type" aria-label="Document type filter">
+          <option value="">All document types</option>
+          <option>Radio Script</option>
+          <option>Interview</option>
+          <option>Health Bulletin</option>
+          <option>Report</option>
+          <option>Research Paper</option>
+          <option>Training Material</option>
+          <option>Transcript</option>
+          <option>Article</option>
+          <option>Case Study</option>
+          <option>Archive Content</option>
+        </select>
+        <input class="filter-input" id="filter-entity" placeholder="Entity filter">
+        <input class="filter-input" id="filter-publisher" placeholder="Publisher filter">
+        <input class="filter-input" id="filter-topic" placeholder="Topic filter">
+      </div>
+      <div class="translate-controls">
+        <select class="translate-select" id="translate-target" aria-label="Translate visible results to">
+          <option value="hi">Hindi</option>
+          <option value="en">English</option>
+          <option value="bn">Bengali</option>
+          <option value="ta">Tamil</option>
+          <option value="te">Telugu</option>
+          <option value="mr">Marathi</option>
+          <option value="gu">Gujarati</option>
+          <option value="ur">Urdu</option>
+          <option value="kn">Kannada</option>
+          <option value="ml">Malayalam</option>
+          <option value="or">Odia</option>
+          <option value="pa">Punjabi</option>
+          <option value="as">Assamese</option>
+          <option value="ne">Nepali</option>
+          <option value="fr">French</option>
+          <option value="es">Spanish</option>
+          <option value="ar">Arabic</option>
+          <option value="sw">Swahili</option>
+        </select>
+        <button class="translate-btn" id="translate-results-btn" onclick="translateVisibleResults()" disabled>Translate visible results</button>
+        <span class="translation-mark" id="translation-status"></span>
+      </div>
+    </div>
+  </div>
+  <main>
+    <div class="status" id="status"></div>
+    <div id="results-container"></div>
+  </main>
+</div>
+
+<!-- ── Script Writer tab ── -->
+<!-- Stats tab -->
+<div class="tab-panel" id="tab-stats">
+  <main>
+    <div class="admin-wrap">
+      <div class="admin-intro">
+        <h2>Corpus Statistics</h2>
+        <p>Operational view of the CommonSource archive: coverage, source mix, top publications, and recent uploads.</p>
+      </div>
+      <div class="admin-status" id="stats-status" role="status"></div>
+      <div class="dashboard-grid" id="stats-metrics">
+        <div class="metric-tile"><div class="metric-value">...</div><div class="metric-label">Loading</div></div>
+      </div>
+      <div class="stats-layout">
+        <section class="admin-panel">
+          <div class="admin-panel-head"><h3>Source types</h3></div>
+          <div class="stat-list" id="stats-source-types"></div>
+        </section>
+        <section class="admin-panel">
+          <div class="admin-panel-head"><h3>Content types</h3></div>
+          <div class="stat-list" id="stats-content-types"></div>
+        </section>
+        <section class="admin-panel">
+          <div class="admin-panel-head"><h3>Top publications</h3></div>
+          <div class="stat-list" id="stats-publications"></div>
+        </section>
+        <section class="admin-panel">
+          <div class="admin-panel-head"><h3>Source origins</h3></div>
+          <div class="stat-list" id="stats-origins"></div>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Diagnostics tab -->
+<div class="tab-panel" id="tab-diagnostics">
+  <main>
+    <div class="admin-wrap">
+      <div class="admin-intro">
+        <h2>Retrieval Diagnostics</h2>
+        <p>Run a query through embedding, Qdrant, SQLite fallback, scoring, and final source-card rendering.</p>
+      </div>
+      <div class="admin-panel">
+        <div class="admin-field">
+          <label for="diag-query">Diagnostic query</label>
+          <input class="admin-input" id="diag-query" value="water access health outreach" />
+        </div>
+        <div class="admin-actions">
+          <button class="admin-btn" id="diag-run-btn" onclick="runRetrievalDiagnostics()">Run diagnostics</button>
+        </div>
+        <div class="admin-status" id="diag-status" role="status"></div>
+      </div>
+      <div class="dashboard-grid" id="diag-metrics"></div>
+      <section class="admin-panel">
+        <div class="admin-panel-head"><h3>Top results</h3></div>
+        <div class="feed-list" id="diag-results">
+          <div class="feed-empty">Run diagnostics to inspect retrieval output.</div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<!-- Health tab -->
+<div class="tab-panel" id="tab-health">
+  <main>
+    <div class="admin-wrap">
+      <div class="admin-intro">
+        <h2>Model Health</h2>
+        <p>Check Gemini connectivity, local Qwen fallback, and the models used by CommonSource AI features.</p>
+      </div>
+      <div class="admin-actions" style="margin-bottom:16px">
+        <button class="admin-btn" onclick="loadHealthPage(true)">Refresh health</button>
+      </div>
+      <div class="admin-status" id="health-status" role="status"></div>
+      <div class="dashboard-grid" id="model-health-metrics"></div>
+      <section class="admin-panel">
+        <div class="admin-panel-head"><h3>Available models</h3></div>
+        <div class="stat-list" id="model-health-list"></div>
+      </section>
+      <section class="admin-panel" style="margin-top:18px">
+        <div class="admin-panel-head">
+          <h3>Qdrant health</h3>
+          <div class="admin-actions">
+            <button class="admin-btn secondary" onclick="ensureQdrantCollection()">Ensure collection</button>
+            <button class="admin-btn secondary" onclick="indexQdrantSample()">Index 500 chunks</button>
+          </div>
+        </div>
+        <div class="dashboard-grid" id="qdrant-health-metrics"></div>
+        <div class="stat-list" id="qdrant-health-list"></div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<div class="tab-panel" id="tab-scriptwriter">
+  <main>
+    <div class="scriptwriter-wrap">
+
+      <div class="sw-intro">
+        <h2>Script Writer</h2>
+        <p>Write radio scripts, community health bulletins, or documentary treatments — guided by Gemini and grounded in the CommonSource archive. Tell it what you're making and it'll walk you through it, pulling real reporting as source material at each step.</p>
+      </div>
+
+      <div class="sw-layout">
+        <!-- Left: config panel -->
+        <div class="sw-config" id="sw-config">
+          <div class="sw-field">
+            <label class="sw-label" data-i18n="sw_format">Format</label>
+            <div class="sw-options" id="sw-format">
+              <div class="sw-option active" data-val="radio">Radio programme</div>
+              <div class="sw-option" data-val="health">Health bulletin</div>
+              <div class="sw-option" data-val="documentary">Documentary treatment</div>
+              <div class="sw-option" data-val="explainer">Community explainer</div>
+            </div>
+          </div>
+          <div class="sw-field">
+            <label class="sw-label" data-i18n="sw_language">Language</label>
+            <div class="sw-options" id="sw-lang">
+              <div class="sw-option active" data-val="English">English</div>
+              <div class="sw-option" data-val="Hindi">Hindi</div>
+              <div class="sw-option" data-val="Bilingual">Bilingual</div>
+            </div>
+          </div>
+          <div class="sw-field">
+            <label class="sw-label" data-i18n="sw_duration">Duration / length</label>
+            <div class="sw-options" id="sw-length">
+              <div class="sw-option active" data-val="5 minutes">5 min</div>
+              <div class="sw-option" data-val="15 minutes">15 min</div>
+              <div class="sw-option" data-val="30 minutes">30 min</div>
+              <div class="sw-option" data-val="long-form">Long-form</div>
+            </div>
+          </div>
+          <div class="sw-field">
+            <label class="sw-label" data-i18n="sw_topic_label">Topic or brief</label>
+            <textarea class="sw-textarea" id="sw-topic" rows="3"
+              data-i18n-placeholder="sw_topic_placeholder"
+              placeholder="e.g. Water scarcity in Bundelkhand and what communities are doing about it"></textarea>
+          </div>
+          <button class="sw-start-btn" id="sw-start-btn" onclick="startScript()" data-i18n="sw_start">
+            Start writing →
+          </button>
+        </div>
+
+        <!-- Right: conversation -->
+        <div class="sw-chat" id="sw-chat">
+          <div class="sw-chat-messages" id="sw-messages">
+            <div class="sw-welcome">
+              <p>Choose your format and topic on the left, then hit <strong>Start writing</strong>.</p>
+              <p>Gemini will guide you through the script step by step — opening, structure, key scenes, sourcing — drawing on real reporting from the CommonSource archive.</p>
+            </div>
+          </div>
+          <div class="sw-input-row" id="sw-input-row" style="display:none">
+            <textarea class="sw-reply-input" id="sw-reply" rows="2"
+              data-i18n-placeholder="sw_reply_placeholder"
+              placeholder="Reply, give feedback, or ask for a rewrite…"></textarea>
+            <button class="sw-send-btn" onclick="sendReply()" data-i18n="sw_send">Send</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- Admin tab -->
+<div class="tab-panel" id="tab-admin">
+  <main>
+    <div class="admin-wrap">
+      <div class="admin-intro">
+        <h2>Admin</h2>
+        <p>Manage approved publisher feeds without leaving the CommonSource console. Feed polling remains bounded by backend timeouts so the page never stays busy forever.</p>
+        <div class="admin-actions" style="margin-top:12px">
+          <a class="admin-btn secondary" href="/users" style="text-decoration:none">User management</a>
+          <a class="admin-btn secondary" href="/admin/publisher-applications" style="text-decoration:none">Publisher applications</a>
+          <a class="admin-btn secondary" href="/moderation" style="text-decoration:none">Moderation queue</a>
+        </div>
+      </div>
+
+      <div class="admin-status" id="admin-status" role="status"></div>
+      <div class="dashboard-grid" id="admin-dashboard">
+        <div class="metric-tile"><div class="metric-value">...</div><div class="metric-label">Loading</div></div>
+      </div>
+
+      <div class="admin-layout">
+        <section class="admin-panel admin-wide" aria-labelledby="publisher-approval-title">
+          <div class="admin-panel-head">
+            <h3 id="publisher-approval-title">Publisher approvals</h3>
+            <button class="admin-btn secondary" onclick="loadAdminPublishers()">Refresh</button>
+          </div>
+          <div class="publisher-list" id="admin-publisher-list">
+            <div class="feed-empty">Open the Admin tab to load publisher approvals.</div>
+          </div>
+        </section>
+
+        <section class="admin-panel" aria-labelledby="feed-form-title">
+          <div class="admin-panel-head">
+            <h3 id="feed-form-title">Register feed</h3>
+          </div>
+          <div class="admin-field">
+            <label for="feed-publisher">Publisher</label>
+            <select class="admin-input" id="feed-publisher"></select>
+          </div>
+          <div class="admin-field">
+            <label for="feed-name">Feed name</label>
+            <input class="admin-input" id="feed-name" placeholder="Daily news RSS" />
+          </div>
+          <div class="admin-field">
+            <label for="feed-url">Feed URL</label>
+            <input class="admin-input" id="feed-url" placeholder="https://example.org/feed.xml" />
+          </div>
+          <div class="admin-actions">
+            <button class="admin-btn" id="feed-add-btn" onclick="addFeed()">Add feed</button>
+          </div>
+        </section>
+
+        <section class="admin-panel" aria-labelledby="feed-list-title">
+          <div class="admin-panel-head">
+            <h3 id="feed-list-title">Feeds</h3>
+            <button class="admin-btn secondary" onclick="loadAdminPanel(true)">Refresh</button>
+          </div>
+          <div class="feed-list" id="feed-list">
+            <div class="feed-empty">Open the Admin tab to load feeds.</div>
+          </div>
+        </section>
+
+        <section class="admin-panel admin-wide" aria-labelledby="upload-title">
+          <div class="admin-panel-head">
+            <h3 id="upload-title">Bulk import documents</h3>
+          </div>
+          <div class="upload-grid">
+            <div class="admin-field">
+              <label for="upload-publisher">Publisher</label>
+              <select class="admin-input" id="upload-publisher"></select>
+            </div>
+            <div class="admin-field">
+              <label for="upload-file">Files</label>
+              <input class="admin-input" id="upload-file" type="file" accept=".txt,.docx,.pdf" multiple />
+            </div>
+            <div class="admin-field">
+              <label for="upload-folder">Folder</label>
+              <input class="admin-input" id="upload-folder" type="file" accept=".txt,.docx,.pdf" webkitdirectory directory multiple />
+            </div>
+            <div class="admin-field">
+              <label for="upload-source-type">Source type</label>
+              <select class="admin-input" id="upload-source-type">
+                <option value="development">Development</option>
+                <option value="news">News</option>
+                <option value="community">Community</option>
+                <option value="official">Official</option>
+              </select>
+            </div>
+            <div class="admin-field">
+              <label for="upload-language">Language</label>
+              <input class="admin-input" id="upload-language" value="en" />
+            </div>
+          </div>
+          <div class="upload-dropzone" id="upload-dropzone">
+            Drop DOCX, PDF, or TXT files here. Metadata, categories, tags, keywords, chunks, embeddings, and Qdrant indexing run automatically.
+          </div>
+          <div class="admin-actions">
+            <button class="admin-btn" id="upload-article-btn" onclick="uploadArticle()">Upload and index</button>
+            <button class="admin-btn secondary" id="bulk-retry-btn" onclick="retryBulkJob()" style="display:none">Retry failed</button>
+          </div>
+          <div class="bulk-progress" id="bulk-progress" style="display:none">
+            <div class="bulk-progress-bar"><span id="bulk-progress-fill"></span></div>
+            <div class="feed-meta" id="bulk-progress-meta"></div>
+          </div>
+          <div class="upload-status" id="upload-status" role="status"></div>
+        </section>
+
+        <section class="admin-panel admin-wide" aria-labelledby="metadata-rebuild-title">
+          <div class="admin-panel-head">
+            <h3 id="metadata-rebuild-title">Rebuild metadata</h3>
+          </div>
+          <p class="feed-meta">Reclassify existing documents with the CommonSource taxonomy and regenerate categories, tags, and keywords.</p>
+          <div class="admin-actions">
+            <button class="admin-btn secondary" id="metadata-rebuild-btn" onclick="rebuildMetadata()">Rebuild metadata</button>
+          </div>
+          <div class="upload-status" id="metadata-rebuild-status" role="status"></div>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>
+
+<footer>
+  <strong>CommonSource</strong> — a Community Media Alliance product.
+  Bringing the voice of community media to the world.
+  <br style="margin-bottom:4px">
+  Community media, local journalism, and public-interest archives · CMA · 2026
+</footer>
+
+<script>
+const API = window.location.protocol === 'file:' ? 'http://localhost:5050' : '';
+const ACCESS_TOKEN_KEY = 'cs_access_token';
+const REFRESH_TOKEN_KEY = 'cs_refresh_token';
+const USER_KEY = 'cs_user';
+const LAST_SEARCH_STATE_KEY = 'cs_last_search_state';
+let csrfToken = '';
+let pendingDropFiles = [];
+let currentBulkJobId = '';
+
+function getAccessToken() {
+  return localStorage.getItem(ACCESS_TOKEN_KEY) || '';
+}
+
+function getStoredUser() {
+  try {
+    return JSON.parse(localStorage.getItem(USER_KEY) || 'null');
+  } catch {
+    return null;
+  }
+}
+
+function hasPaidAccess() {
+  const user = getStoredUser();
+  return !!(user && (user.is_paid || ['super_admin', 'admin'].includes(user.role)));
+}
+
+function paidFeatureMessage(feature) {
+  const user = getStoredUser();
+  if (!user) return `${feature} is available for paid users. Login with a paid account to use it.`;
+  return `${feature} is available for paid users. Your archive search results are still available below.`;
+}
+
+function renderPaywallPanel(feature, detail = '') {
+  return `<div class="ai-answer paywall-panel">
+    <div class="ai-answer-label"><span class="ai-label-text">${escHtml(feature)}</span></div>
+    <div class="ai-answer-text" style="color:var(--mid);">
+      ${escHtml(detail || paidFeatureMessage(feature))}
+    </div>
+  </div>`;
+}
+
+function clearAuthState() {
+  localStorage.removeItem(ACCESS_TOKEN_KEY);
+  localStorage.removeItem(REFRESH_TOKEN_KEY);
+  localStorage.removeItem(USER_KEY);
+  csrfToken = '';
+}
+
+async function getCsrfToken() {
+  if (csrfToken) return csrfToken;
+  const token = getAccessToken();
+  if (!token) return '';
+  const res = await fetch(`${API}/api/auth/csrf`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
+  csrfToken = data.csrf_token || '';
+  return csrfToken;
+}
+
+function updateUserMenu() {
+  const user = getStoredUser();
+  const token = getAccessToken();
+  const loggedIn = !!(user && token);
+  const login = document.getElementById('login-link');
+  const register = document.getElementById('register-link');
+  if (login) login.style.display = loggedIn ? 'none' : '';
+  if (register) register.style.display = loggedIn ? 'none' : '';
+  const chip = document.getElementById('user-chip');
+  const userAdmin = document.getElementById('user-admin-link');
+  const dashboard = document.getElementById('dashboard-link');
+  const profile = document.getElementById('profile-link');
+  const publisher = document.getElementById('publisher-link');
+  const publisherApplications = document.getElementById('publisher-applications-link');
+  const moderation = document.getElementById('moderation-link');
+  const canManageUsers = loggedIn && ['super_admin', 'admin'].includes(user.role);
+  const canManagePublisher = loggedIn && ['publisher', 'admin', 'super_admin'].includes(user.role);
+  const canReview = loggedIn && ['reviewer', 'admin', 'super_admin'].includes(user.role);
+  if (userAdmin) userAdmin.style.display = canManageUsers ? '' : 'none';
+  if (dashboard) dashboard.style.display = loggedIn ? '' : 'none';
+  if (profile) profile.style.display = loggedIn ? '' : 'none';
+  if (publisher) publisher.style.display = canManagePublisher ? '' : 'none';
+  if (publisherApplications) publisherApplications.style.display = canManageUsers ? '' : 'none';
+  if (moderation) moderation.style.display = canReview ? '' : 'none';
+  if (chip) {
+    chip.style.display = loggedIn ? '' : 'none';
+    const plan = hasPaidAccess() ? 'paid' : 'free';
+    const roleLabel = String(user.role || 'reader').replace('_', ' ');
+    const displayName = user.name || user.email;
+    chip.innerHTML = loggedIn ? `<strong>${escHtml(displayName)}</strong> [${escHtml(roleLabel)}]` : '';
+    chip.title = loggedIn ? `${displayName} [${roleLabel}] (${plan})` : '';
+  }
+  const logout = document.getElementById('logout-btn');
+  if (logout) logout.style.display = loggedIn ? '' : 'none';
+}
+
+async function refreshCurrentUser() {
+  const token = getAccessToken();
+  if (!token) {
+    updateUserMenu();
+    return null;
+  }
+  try {
+    const res = await fetch(`${API}/api/auth/me`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
+    if (data.user) localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+    updateUserMenu();
+    return data.user || null;
+  } catch {
+    clearAuthState();
+    updateUserMenu();
+    return null;
+  }
+}
+
+async function logoutUser() {
+  const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY) || '';
+  try {
+    await fetch(`${API}/api/auth/logout`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(getAccessToken() ? { Authorization: `Bearer ${getAccessToken()}` } : {})
+      },
+      body: JSON.stringify({ refresh_token: refreshToken })
+    });
+  } catch (err) {
+    console.warn('Logout request failed', err);
+  } finally {
+    clearAuthState();
+    updateUserMenu();
+    if (typeof setAdminStatus === 'function') setAdminStatus('Logged out.');
+  }
+}
+
+// ── Tab switching ──────────────────────────────────────────────────────────
+const TAB_ALIASES = {
+  search: 'articles',
+  article: 'articles',
+  articles: 'articles',
+  script: 'scriptwriter',
+  'script-writer': 'scriptwriter',
+  scriptwriter: 'scriptwriter',
+  stats: 'stats',
+  diagnostics: 'diagnostics',
+  health: 'health',
+  admin: 'admin',
+};
+
+function normalizeTabName(name) {
+  return TAB_ALIASES[String(name || '').replace(/^#/, '').toLowerCase()] || 'articles';
+}
+
+function switchTab(name, btn, options = {}) {
+  name = normalizeTabName(name);
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(`tab-${name}`)?.classList.add('active');
+  (btn || document.getElementById(`tab-btn-${name}`))?.classList.add('active');
+  if (options.updateHash !== false && window.location.hash !== `#${name}`) {
+    history.replaceState(null, '', `#${name}`);
+  }
+  if (name === 'admin') loadAdminPanel();
+  if (name === 'stats') loadStatsPage();
+  if (name === 'diagnostics') loadDiagnosticsPage();
+  if (name === 'health') loadHealthPage();
+}
+
+document.addEventListener('DOMContentLoaded', refreshCurrentUser);
+document.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(window.location.search);
+  const urlState = searchStateFromParams(params);
+  const hasUrlSearch = hasSearchState(urlState.q, urlState.filters);
+  const rememberedState = hasUrlSearch ? null : readLastSearchState();
+  const state = hasUrlSearch ? urlState : rememberedState;
+  switchTab(state ? 'articles' : window.location.hash, null, { updateHash: false });
+  if (!state || !hasSearchState(state.q, state.filters)) return;
+  applySearchState(state);
+  setTimeout(() => doSearch(), 0);
+});
+window.addEventListener('hashchange', () => switchTab(window.location.hash, null, { updateHash: false }));
+
+// ── Script Writer ──────────────────────────────────────────────────────────
+// Option selectors
+document.addEventListener('DOMContentLoaded', () => {
+  ['sw-format','sw-lang','sw-length'].forEach(groupId => {
+    const group = document.getElementById(groupId);
+    if (!group) return;
+    group.querySelectorAll('.sw-option').forEach(opt => {
+      opt.addEventListener('click', () => {
+        group.querySelectorAll('.sw-option').forEach(o => o.classList.remove('active'));
+        opt.classList.add('active');
+      });
+    });
+  });
+});
+
+let swHistory = [];  // [{role, content}]
+
+function showScriptWriterPaywall() {
+  const msgs = document.getElementById('sw-messages');
+  if (msgs) {
+    msgs.innerHTML = `<div class="sw-welcome">
+      <p>${escHtml(paidFeatureMessage('Script Writer'))}</p>
+    </div>`;
+  }
+  const inputRow = document.getElementById('sw-input-row');
+  if (inputRow) inputRow.style.display = 'none';
+}
+
+function getSwConfig() {
+  const fmt  = document.querySelector('#sw-format .sw-option.active')?.dataset.val || 'radio';
+  const lang = document.querySelector('#sw-lang .sw-option.active')?.dataset.val || 'English';
+  const len  = document.querySelector('#sw-length .sw-option.active')?.dataset.val || '5 minutes';
+  const topic = document.getElementById('sw-topic')?.value?.trim() || '';
+  return { fmt, lang, len, topic };
+}
+
+function addMessage(role, content, sources = []) {
+  const msgs = document.getElementById('sw-messages');
+  // Clear welcome on first real message
+  msgs.querySelector('.sw-welcome')?.remove();
+
+  const label = role === 'user' ? t('you_label') : t('qwen_label');
+  const sourcesHtml = sources.length
+    ? `<div class="sw-sources-used">${sources.map(s =>
+        `<span class="sw-source-chip" data-query="${escHtml(s)}" onclick="runSearchFromData(this)" title="Search archive">${escHtml(s)}</span>`
+      ).join('')}</div>`
+    : '';
+
+  const el = document.createElement('div');
+  el.className = `sw-msg ${role}`;
+  el.innerHTML = `
+    <div class="sw-msg-label">${label}</div>
+    <div class="sw-msg-bubble">${escHtml(content)}</div>
+    ${sourcesHtml}`;
+  msgs.appendChild(el);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+async function startScript() {
+  if (!hasPaidAccess()) {
+    showScriptWriterPaywall();
+    return;
+  }
+  const { fmt, lang, len, topic } = getSwConfig();
+  if (!topic) {
+    document.getElementById('sw-topic').focus();
+    document.getElementById('sw-topic').style.borderColor = 'var(--red)';
+    return;
+  }
+
+  const btn = document.getElementById('sw-start-btn');
+  btn.disabled = true;
+  btn.textContent = t('starting_script');
+  swHistory = [];
+
+  // Show input area
+  document.getElementById('sw-input-row').style.display = 'flex';
+
+  const inHindi = LANG === 'hi';
+  const systemPrompt = inHindi
+    ? `आप CMA (कम्युनिटी मीडिया अलायंस) के लिए एक स्क्रिप्ट लेखन सहायक हैं।
+आप भारत के पत्रकारों और सामुदायिक रेडियो निर्माताओं की मदद करते हैं।
+यह एक ${fmt} स्क्रिप्ट है, लगभग ${len} लंबी, ${lang} में।
+हमेशा हिन्दी में जवाब दें। सरल, स्पष्ट भाषा उपयोग करें।
+CommonSource संग्रह की असली रिपोर्टिंग का संदर्भ दें जब उपयुक्त हो।
+लेखक को एक-एक कदम से मार्गदर्शन दें: पहले कोण स्पष्ट करें, फिर संरचना बनाएं, फिर हर भाग लिखें।
+एक समय में एक प्रश्न पूछें। गर्मजोशी से, व्यावहारिक और पेशेवर तरीके से बात करें।`
+    : `You are a script writing assistant for CMA (Community Media Alliance),
+helping journalists and community radio producers in India create impactful ${fmt} scripts.
+The output should be in ${lang}, approximately ${len} long.
+You have access to real reporting from the CommonSource archive — refer to actual stories when relevant.
+Guide the writer step by step: first clarify the angle, then outline the structure,
+then draft each section, then refine. Ask one focused question at a time.
+Keep your tone warm, practical, and professional. This is for community media — not corporate broadcast.`;
+
+  const userMsg = `I want to make a ${fmt} (${len}, in ${lang}) about: ${topic}`;
+  swHistory.push({ role: 'system', content: systemPrompt });
+  swHistory.push({ role: 'user', content: userMsg });
+
+  addMessage('user', userMsg);
+
+  // Get archive context for the topic
+  let archiveSources = [];
+  try {
+    const d = await fetchJsonWithTimeout(`${API}/api/search?q=${encodeURIComponent(topic)}&k=3`, {}, 30000);
+    if (d.results?.length) {
+      const archiveResults = d.results.slice(0, 2);
+      archiveSources = archiveResults.map(r => r.title || r.publication);
+      const archiveContext = archiveResults.map((r,i) =>
+        `[Archive ${i+1}: ${r.publication}, ${r.date}]\nTitle: ${r.title || 'Untitled'}\nReported passage:\n${String(r.excerpt || '').slice(0, 700)}`
+      ).join('\n\n');
+      swHistory.push({
+        role: 'system',
+        content: `Relevant reporting from CommonSource archive:\n${archiveContext}\nUse these as source material if relevant.`
+      });
+    }
+  } catch(e) {
+    console.warn('Archive context unavailable', e);
+  }
+
+  try {
+    await callScriptWriter(archiveSources);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Start writing →';
+  }
+}
+
+async function sendReply() {
+  if (!hasPaidAccess()) {
+    showScriptWriterPaywall();
+    return;
+  }
+  const input = document.getElementById('sw-reply');
+  const text  = input.value.trim();
+  if (!text) return;
+  input.value = '';
+
+  swHistory.push({ role: 'user', content: text });
+  addMessage('user', text);
+  await callScriptWriter([]);
+}
+
+async function callScriptWriter(sources) {
+  const sendBtn = document.querySelector('.sw-send-btn');
+  if (sendBtn) sendBtn.disabled = true;
+
+  // Show a thinking indicator in the chat
+  const msgs = document.getElementById('sw-messages');
+  const thinking = document.createElement('div');
+  thinking.className = 'sw-msg assistant';
+  thinking.id = 'sw-thinking';
+  thinking.innerHTML = `
+    <div class="sw-msg-label">${t('qwen_label')}</div>
+    <div class="sw-msg-bubble" style="color:var(--light); font-style:italic; display:flex; align-items:center; gap:8px;">
+      <div class="spinner"></div>
+      <span>${modelWarmed ? 'Writing…' : 'Loading model, this takes a moment on first run…'}</span>
+    </div>`;
+  msgs.appendChild(thinking);
+  msgs.scrollTop = msgs.scrollHeight;
+
+  // Build prompt from history
+  const turns = swHistory.filter(m => m.role !== 'system').slice(-8).map(m =>
+    `${m.role === 'user' ? 'Writer' : 'Assistant'}: ${m.content}`
+  ).join('\n\n');
+  const system = swHistory.find(m => m.role === 'system')?.content || '';
+  const archive = swHistory.filter(m => m.role === 'system').slice(1, 2).map(m => m.content).join('\n');
+
+  const prompt = `${system}\n\n${archive}\n\n${turns}\n\nAssistant:`;
+
+  try {
+    const d = await fetchJsonWithTimeout(`${API}/api/generate?mode=script_writer&timeout=90`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt, max_tokens: 500, mode: 'script_writer', temperature: 0.35 })
+    }, 100000);
+    if (d.error) throw new Error(d.error);
+    const reply = d.response || d.text || 'Could not generate response.';
+    modelWarmed = true;
+    swHistory.push({ role: 'assistant', content: reply });
+    addMessage('assistant', reply, sources);
+  } catch(e) {
+    const rawMessage = e.message || '';
+    const hint = e.name === 'AbortError'
+      ? 'The AI request timed out. Please try again.'
+      : (rawMessage.toLowerCase().includes('paid users')
+        ? rawMessage
+        : rawMessage.includes('Ollama')
+        ? rawMessage
+        : 'Could not reach Gemini or the local Qwen fallback. Check the model health page.');
+    addMessage('assistant', hint);
+  } finally {
+    thinking.remove();
+    if (sendBtn) sendBtn.disabled = false;
+  }
+}
+
+// Handle Enter in reply box
+document.addEventListener('DOMContentLoaded', () => {
+  const replyInput = document.getElementById('sw-reply');
+  if (replyInput) {
+    replyInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendReply(); }
+    });
+  }
+});
+
+// ── Load stats on startup ──────────────────────────────────────────────────
+// Corpus statistics page
+let statsLoaded = false;
+
+function setStatsStatus(message, isError = false) {
+  const el = document.getElementById('stats-status');
+  if (!el) return;
+  el.textContent = message || '';
+  el.classList.toggle('error', !!isError);
+}
+
+function renderStatList(id, entries) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (!entries.length) {
+    el.innerHTML = '<div class="feed-empty">No data yet.</div>';
+    return;
+  }
+  el.innerHTML = entries.map(([label, count]) => `
+    <div class="stat-row">
+      <span>${escHtml(label || 'unknown')}</span>
+      <span>${fmtNum(count)}</span>
+    </div>`).join('');
+}
+
+async function loadStatsPage(force = false) {
+  if (statsLoaded && !force) return;
+  setStatsStatus('Loading corpus statistics...');
+  const metricsEl = document.getElementById('stats-metrics');
+  let settled = false;
+  const fallbackTimer = setTimeout(() => {
+    if (settled) return;
+    const message = 'Stats unavailable — check backend connection or refresh.';
+    setStatsStatus(message, true);
+    if (metricsEl) {
+      metricsEl.innerHTML = `<div class="feed-empty">${escHtml(message)}</div>`;
+    }
+  }, 10000);
+  try {
+    const data = await fetchJsonWithTimeout(`${API}/api/corpus/stats`, {}, 10000);
+    settled = true;
+    clearTimeout(fallbackTimer);
+    const metrics = [
+      { label: 'Articles', value: fmtNum(data.articles) },
+      { label: 'Assets', value: fmtNum(data.assets) },
+      { label: 'Chunks', value: fmtNum(data.chunks) },
+      { label: 'Coverage', value: data.coverage || '0%' },
+      { label: 'Date range', value: `${data.date_from?.slice(0, 4) || 'n/a'}-${data.date_to?.slice(0, 4) || 'n/a'}` },
+      { label: 'Uploads', value: fmtNum(data.source_origins?.upload || 0) },
+    ];
+    if (metricsEl) {
+      metricsEl.innerHTML = metrics.map(m => `
+      <div class="metric-tile">
+        <div class="metric-value">${escHtml(m.value)}</div>
+        <div class="metric-label">${escHtml(m.label)}</div>
+      </div>`).join('');
+    }
+    const asEntries = obj => Object.entries(obj || {}).sort((a, b) => Number(b[1]) - Number(a[1]));
+    renderStatList('stats-source-types', asEntries(data.source_types));
+    renderStatList('stats-content-types', asEntries(data.content_types));
+    renderStatList('stats-origins', asEntries(data.source_origins));
+    renderStatList('stats-publications', (data.top_publications || []).map(r => [r.label, r.count]));
+    statsLoaded = true;
+    setStatsStatus('');
+  } catch (e) {
+    settled = true;
+    clearTimeout(fallbackTimer);
+    const message = e.name === 'AbortError'
+      ? 'Stats unavailable — check backend connection or refresh.'
+      : (e.message || 'Could not load corpus statistics.');
+    setStatsStatus(message, true);
+    if (metricsEl) {
+      metricsEl.innerHTML = `<div class="feed-empty">${escHtml(message)}</div>`;
+    }
+  }
+}
+
+// Retrieval diagnostics page
+function loadDiagnosticsPage() {
+  document.getElementById('diag-query')?.focus();
+}
+
+function setDiagStatus(message, isError = false) {
+  const el = document.getElementById('diag-status');
+  if (!el) return;
+  el.textContent = message || '';
+  el.classList.toggle('error', !!isError);
+}
+
+async function runRetrievalDiagnostics() {
+  const query = document.getElementById('diag-query')?.value.trim() || '';
+  const btn = document.getElementById('diag-run-btn');
+  if (!query) {
+    setDiagStatus('Enter a query to diagnose.', true);
+    return;
+  }
+  if (btn) btn.disabled = true;
+  setDiagStatus('Running retrieval diagnostics...');
+  try {
+    const data = await fetchJsonWithTimeout(`${API}/api/retrieval/diagnostics?q=${encodeURIComponent(query)}&k=6`, {}, 70000);
+    const metrics = [
+      { label: 'Backend', value: data.final?.backend || 'unknown' },
+      { label: 'Final results', value: fmtNum(data.final?.count) },
+      { label: 'SQLite candidates', value: fmtNum(data.sqlite?.candidates) },
+      { label: 'Scored rows', value: fmtNum(data.sqlite?.scored) },
+      { label: 'Qdrant hits', value: fmtNum(data.qdrant?.hits) },
+      { label: 'Total seconds', value: data.total_seconds ?? 'n/a' },
+    ];
+    document.getElementById('diag-metrics').innerHTML = metrics.map(m => `
+      <div class="metric-tile">
+        <div class="metric-value">${escHtml(m.value)}</div>
+        <div class="metric-label">${escHtml(m.label)}</div>
+      </div>`).join('');
+    const results = data.final?.results || [];
+    const out = document.getElementById('diag-results');
+    if (!results.length) {
+      out.innerHTML = '<div class="feed-empty">No final results. Check candidate count and Qdrant health above.</div>';
+    } else {
+      out.innerHTML = results.map(r => `
+        <div class="feed-row">
+          <div class="feed-title"><span>${escHtml(r.title || 'Untitled')}</span><span class="feed-status">${escHtml(String(r.score ?? ''))}</span></div>
+          <div class="feed-meta">${escHtml(r.publication || 'Unknown')} - ${escHtml(r.source_type || '')} - ${escHtml(r.date || '')}</div>
+          <div class="feed-meta">${escHtml(r.excerpt || '')}</div>
+        </div>`).join('');
+    }
+    setDiagStatus(`Keywords: ${(data.keywords || []).join(', ') || 'none'}`);
+  } catch (e) {
+    setDiagStatus(e.message || 'Retrieval diagnostics failed.', true);
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+// Model health page
+let healthLoaded = false;
+
+function setHealthStatus(message, isError = false) {
+  const el = document.getElementById('health-status');
+  if (!el) return;
+  el.textContent = message || '';
+  el.classList.toggle('error', !!isError);
+}
+
+async function loadHealthPage(force = false) {
+  if (healthLoaded && !force) return;
+  setHealthStatus('Checking model health...');
+  try {
+    const data = await fetchJsonWithTimeout(`${API}/api/health/models`, {}, 20000);
+    const metrics = [
+      { label: 'Ollama', value: data.ollama_running ? 'Up' : 'Down' },
+      { label: 'Gemini API', value: data.api_connected ? 'Connected' : 'Unavailable' },
+      { label: 'Qwen fallback', value: data.qwen_ready ? 'Ready' : 'Unavailable' },
+      { label: 'Generation', value: data.primary_model || data.generation_model || 'None' },
+      { label: 'Translation', value: data.translation_model || 'None' },
+      { label: 'Models found', value: fmtNum((data.models || []).length) },
+      { label: 'Seconds', value: data.seconds ?? 'n/a' },
+    ];
+    document.getElementById('model-health-metrics').innerHTML = metrics.map(m => `
+      <div class="metric-tile">
+        <div class="metric-value">${escHtml(m.value)}</div>
+        <div class="metric-label">${escHtml(m.label)}</div>
+      </div>`).join('');
+    const models = data.models || [];
+    document.getElementById('model-health-list').innerHTML = models.length
+      ? models.map(name => `<div class="stat-row"><span>${escHtml(name)}</span><span>installed</span></div>`).join('')
+      : '<div class="feed-empty">No Ollama models reported. Start Ollama and pull qwen2.5:1.5b.</div>';
+    await loadQdrantHealth();
+    setHealthStatus(data.error || '');
+    healthLoaded = true;
+  } catch (e) {
+    setHealthStatus(e.message || 'Could not check model health.', true);
+  }
+}
+
+async function fetchJsonAllowStatus(url, options = {}, timeoutMs = 30000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { ...options, signal: controller.signal });
+    const data = await res.json().catch(() => ({}));
+    data.http_status = res.status;
+    data.http_ok = res.ok;
+    return data;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function renderQdrantHealth(data) {
+  const metrics = [
+    { label: 'Configured', value: data.configured ? 'Yes' : 'No' },
+    { label: 'Available', value: data.available ? 'Yes' : 'No' },
+    { label: 'Collection', value: data.collection_exists ? 'Ready' : 'Missing' },
+    { label: 'Points', value: fmtNum(data.points) },
+    { label: 'Vector size', value: fmtNum(data.vector_size) },
+    { label: 'HTTP', value: data.http_status || 'n/a' },
+  ];
+  document.getElementById('qdrant-health-metrics').innerHTML = metrics.map(m => `
+    <div class="metric-tile">
+      <div class="metric-value">${escHtml(m.value)}</div>
+      <div class="metric-label">${escHtml(m.label)}</div>
+    </div>`).join('');
+  const detail = [
+    ['URL', data.url || ''],
+    ['Collection name', data.collection || ''],
+    ['Error', data.error || 'None'],
+  ];
+  document.getElementById('qdrant-health-list').innerHTML = detail.map(([label, value]) =>
+    `<div class="stat-row"><span>${escHtml(label)}</span><span>${escHtml(value)}</span></div>`
+  ).join('');
+}
+
+async function loadQdrantHealth() {
+  const data = await fetchJsonAllowStatus(`${API}/api/qdrant/health`, {}, 20000);
+  renderQdrantHealth(data);
+}
+
+async function ensureQdrantCollection() {
+  setHealthStatus('Ensuring Qdrant collection...');
+  try {
+    const data = await fetchJsonAllowStatus(`${API}/api/qdrant/ensure`, { method: 'POST' }, 30000);
+    renderQdrantHealth(data);
+    setHealthStatus(data.error || 'Qdrant collection check complete.', !data.http_ok && !data.available);
+  } catch (e) {
+    setHealthStatus(e.message || 'Could not ensure Qdrant collection.', true);
+  }
+}
+
+async function indexQdrantSample() {
+  setHealthStatus('Indexing a bounded Qdrant sample...');
+  try {
+    const data = await fetchJsonAllowStatus(`${API}/api/qdrant/index`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ limit: 500, offset: 0, recreate: false })
+    }, 60000);
+    renderQdrantHealth(data.health || data);
+    const msg = data.error || `Indexed ${fmtNum(data.indexed)} chunks; skipped ${fmtNum(data.skipped)}.`;
+    setHealthStatus(msg, !data.http_ok && !data.ok);
+  } catch (e) {
+    setHealthStatus(e.message || 'Could not index Qdrant sample.', true);
+  }
+}
+
+// Admin feed management
+let adminLoaded = false;
+let adminLoading = false;
+
+function setAdminStatus(message, isError = false) {
+  const el = document.getElementById('admin-status');
+  if (!el) return;
+  el.textContent = message || '';
+  el.classList.toggle('error', !!isError);
+}
+
+async function loadAdminPanel(force = false) {
+  if (adminLoading) return;
+  if (adminLoaded && !force) return;
+  adminLoading = true;
+  setAdminStatus('Loading admin data...');
+  const results = await Promise.allSettled([
+    loadAdminDashboard(),
+    loadAdminPublishers(),
+    loadFeedPublishers(),
+    loadFeeds()
+  ]);
+  const errors = results
+    .filter(r => r.status === 'rejected')
+    .map(r => r.reason?.message || String(r.reason));
+  adminLoaded = true;
+  adminLoading = false;
+  setAdminStatus(errors.length ? errors[0] : '', !!errors.length);
+}
+
+function fmtNum(value) {
+  return Number(value || 0).toLocaleString();
+}
+
+async function loadAdminDashboard() {
+  const el = document.getElementById('admin-dashboard');
+  if (!el) return;
+  el.innerHTML = '<div class="metric-tile"><div class="metric-value">...</div><div class="metric-label">Loading</div></div>';
+  const data = await fetchJsonWithTimeout(`${API}/api/admin/dashboard`, {}, 20000);
+  const corpus = data.corpus || {};
+  const publishers = data.publishers || {};
+  const feeds = data.feeds || {};
+  const users = data.users || {};
+  const metrics = [
+    { label: 'Articles', value: fmtNum(corpus.articles) },
+    { label: 'Embedded chunks', value: fmtNum(corpus.embedded) },
+    { label: 'Pending publishers', value: fmtNum(publishers.pending) },
+    { label: 'Active feeds', value: fmtNum(feeds.active) },
+    { label: 'Users', value: fmtNum(users.total) },
+    { label: 'Active users', value: fmtNum(users.active) },
+    { label: 'Ollama', value: data.services?.ollama_running ? 'Up' : 'Down' },
+  ];
+  el.innerHTML = metrics.map(m => `
+    <div class="metric-tile">
+      <div class="metric-value">${escHtml(m.value)}</div>
+      <div class="metric-label">${escHtml(m.label)}</div>
+    </div>`).join('');
+}
+
+async function loadAdminPublishers() {
+  const list = document.getElementById('admin-publisher-list');
+  if (!list) return;
+  list.innerHTML = '<div class="feed-empty">Loading publishers...</div>';
+  const data = await fetchJsonWithTimeout(`${API}/api/admin/publishers`, {}, 20000);
+  renderAdminPublishers(data.publishers || []);
+}
+
+function renderAdminPublishers(publishers) {
+  const list = document.getElementById('admin-publisher-list');
+  if (!list) return;
+  if (!publishers.length) {
+    list.innerHTML = '<div class="feed-empty">No publishers registered yet.</div>';
+    return;
+  }
+  list.innerHTML = publishers.map(p => {
+    const primaryAction = p.status === 'approved' ? 'reject' : 'approve';
+    const secondaryAction = p.status === 'pending' ? 'reject' : 'pending';
+    return `<div class="publisher-row">
+      <div>
+        <div class="publisher-name">${escHtml(p.name || 'Unknown publisher')} <span class="feed-status">${escHtml(p.status || 'unknown')}</span></div>
+        <div class="publisher-meta">${escHtml(p.contact_email || '')}${p.geography ? ' - ' + escHtml(p.geography) : ''}${p.language ? ' - ' + escHtml(p.language) : ''}</div>
+        <div class="publisher-meta">${fmtNum(p.feeds)} feeds - ${fmtNum(p.articles)} articles - ${escHtml(p.storage_mode || 'federated')}</div>
+      </div>
+      <div class="publisher-actions">
+        <button class="admin-btn" data-id="${escHtml(p.id)}" data-action="${primaryAction}" onclick="setPublisherStatus(this.dataset.id, this.dataset.action)">${primaryAction === 'approve' ? 'Approve' : 'Reject'}</button>
+        <button class="admin-btn secondary" data-id="${escHtml(p.id)}" data-action="${secondaryAction}" onclick="setPublisherStatus(this.dataset.id, this.dataset.action)">${secondaryAction === 'pending' ? 'Mark pending' : 'Reject'}</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function setPublisherStatus(id, action) {
+  if (!id || !action) return;
+  setAdminStatus(`${action === 'approve' ? 'Approving' : action === 'reject' ? 'Rejecting' : 'Updating'} publisher...`);
+  try {
+    await fetchJsonWithTimeout(`${API}/api/admin/publishers/${encodeURIComponent(id)}/${encodeURIComponent(action)}`, {
+      method: 'POST'
+    }, 20000);
+    await Promise.all([loadAdminDashboard(), loadAdminPublishers(), loadFeedPublishers()]);
+    setAdminStatus('Publisher status updated.');
+  } catch (e) {
+    setAdminStatus(e.message || 'Could not update publisher status.', true);
+  }
+}
+
+async function loadFeedPublishers() {
+  const select = document.getElementById('feed-publisher');
+  const uploadSelect = document.getElementById('upload-publisher');
+  const addBtn = document.getElementById('feed-add-btn');
+  const uploadBtn = document.getElementById('upload-article-btn');
+  const selects = [select, uploadSelect].filter(Boolean);
+  if (!selects.length) return;
+  selects.forEach(el => {
+    el.disabled = true;
+    el.innerHTML = '<option value="">Loading publishers...</option>';
+  });
+  const data = await fetchJsonWithTimeout(`${API}/api/publishers`, {}, 20000);
+  const publishers = Array.isArray(data) ? data : (data.publishers || []);
+  if (!publishers.length) {
+    selects.forEach(el => { el.innerHTML = '<option value="">No approved publishers</option>'; });
+    if (addBtn) addBtn.disabled = true;
+    if (uploadBtn) uploadBtn.disabled = true;
+    return;
+  }
+  const options = publishers.map(p =>
+    `<option value="${escHtml(p.id)}">${escHtml(p.name)}${p.geography ? ' - ' + escHtml(p.geography) : ''}</option>`
+  ).join('');
+  selects.forEach(el => {
+    el.innerHTML = options;
+    el.disabled = false;
+  });
+  if (addBtn) addBtn.disabled = false;
+  if (uploadBtn) uploadBtn.disabled = false;
+}
+
+async function loadFeeds() {
+  const list = document.getElementById('feed-list');
+  if (!list) return;
+  list.innerHTML = '<div class="feed-empty">Loading feeds...</div>';
+  const data = await fetchJsonWithTimeout(`${API}/api/feeds`, {}, 20000);
+  renderFeeds(data.feeds || []);
+}
+
+function renderFeeds(feeds) {
+  const list = document.getElementById('feed-list');
+  if (!list) return;
+  if (!feeds.length) {
+    list.innerHTML = '<div class="feed-empty">No feeds registered yet.</div>';
+    return;
+  }
+  list.innerHTML = feeds.map(feed => {
+    const lastPoll = feed.last_polled_at ? `Last poll: ${escHtml(feed.last_polled_at)}` : 'Not polled yet';
+    return `<div class="feed-row">
+      <div class="feed-title">
+        <span>${escHtml(feed.feed_name || feed.feed_url)}</span>
+        <span class="feed-status">${escHtml(feed.status || 'active')}</span>
+      </div>
+      <div class="feed-meta">${escHtml(feed.publisher_name || 'Unknown publisher')} (${escHtml(feed.publisher_status || 'unknown')})</div>
+      <div class="feed-meta"><a href="${escHtml(feed.feed_url)}" target="_blank" rel="noopener">${escHtml(feed.feed_url)}</a></div>
+      <div class="feed-meta">${lastPoll}</div>
+    </div>`;
+  }).join('');
+}
+
+async function addFeed() {
+  const publisher = document.getElementById('feed-publisher')?.value || '';
+  const feedName = document.getElementById('feed-name')?.value.trim() || '';
+  const feedUrl = document.getElementById('feed-url')?.value.trim() || '';
+  const btn = document.getElementById('feed-add-btn');
+  if (!publisher) {
+    setAdminStatus('Choose an approved publisher before adding a feed.', true);
+    return;
+  }
+  if (!feedUrl) {
+    setAdminStatus('Feed URL is required.', true);
+    document.getElementById('feed-url')?.focus();
+    return;
+  }
+  if (btn) btn.disabled = true;
+  setAdminStatus('Adding feed...');
+  try {
+    await fetchJsonWithTimeout(`${API}/api/feed/add`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ publisher_id: publisher, feed_name: feedName, feed_url: feedUrl })
+    }, 20000);
+    document.getElementById('feed-name').value = '';
+    document.getElementById('feed-url').value = '';
+    await loadFeeds();
+    setAdminStatus('Feed registered.');
+  } catch (e) {
+    setAdminStatus(e.message || 'Could not add feed.', true);
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+function setUploadStatus(message, isError = false) {
+  const el = document.getElementById('upload-status');
+  if (!el) return;
+  el.textContent = message || '';
+  el.classList.toggle('error', !!isError);
+}
+
+function getSelectedUploadFiles() {
+  const direct = Array.from(document.getElementById('upload-file')?.files || []);
+  const folder = Array.from(document.getElementById('upload-folder')?.files || []);
+  const dropped = Array.from(pendingDropFiles || []);
+  return [...direct, ...folder, ...dropped].filter(file => /\.(txt|docx|pdf)$/i.test(file.name || ''));
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const dz = document.getElementById('upload-dropzone');
+  if (!dz) return;
+  ['dragenter', 'dragover'].forEach(evt => dz.addEventListener(evt, e => {
+    e.preventDefault();
+    dz.classList.add('active');
+  }));
+  ['dragleave', 'drop'].forEach(evt => dz.addEventListener(evt, e => {
+    e.preventDefault();
+    dz.classList.remove('active');
+  }));
+  dz.addEventListener('drop', e => {
+    pendingDropFiles = Array.from(e.dataTransfer?.files || []);
+    setUploadStatus(`${pendingDropFiles.length} dropped file${pendingDropFiles.length === 1 ? '' : 's'} ready.`);
+  });
+});
+
+function renderBulkProgress(data) {
+  const wrap = document.getElementById('bulk-progress');
+  const fill = document.getElementById('bulk-progress-fill');
+  const meta = document.getElementById('bulk-progress-meta');
+  const retry = document.getElementById('bulk-retry-btn');
+  if (!wrap || !fill || !meta) return;
+  const total = data.total_files || 0;
+  const processed = data.processed || 0;
+  const pct = total ? Math.round((processed / total) * 100) : 0;
+  wrap.style.display = 'block';
+  fill.style.width = `${Math.min(pct, 100)}%`;
+  const eta = data.eta_seconds ? ` - ETA ${Math.ceil(data.eta_seconds / 60)} min` : '';
+  meta.textContent = `${processed}/${total} processed - ${data.remaining || 0} remaining - ${data.failed || 0} failed - ${data.duplicates || 0} duplicates${eta}`;
+  if (retry) retry.style.display = data.failed ? '' : 'none';
+}
+
+async function pollBulkJob(jobId) {
+  currentBulkJobId = jobId;
+  const data = await fetchJsonWithTimeout(`${API}/api/ingest/bulk/${encodeURIComponent(jobId)}`, {}, 20000);
+  renderBulkProgress(data);
+  const done = ['completed', 'completed_with_errors', 'failed'].includes(data.status);
+  setUploadStatus(`Bulk import ${data.status}: ${data.processed || 0}/${data.total_files || 0} files processed${data.failed ? `, ${data.failed} failed` : ''}.`, data.status === 'failed');
+  if (!done) setTimeout(() => pollBulkJob(jobId).catch(e => setUploadStatus(e.message || 'Could not refresh bulk import status.', true)), 2000);
+  else loadStats();
+}
+
+async function retryBulkJob() {
+  if (!currentBulkJobId) return;
+  setUploadStatus('Retrying failed files...');
+  try {
+    const data = await fetchJsonWithTimeout(`${API}/api/ingest/bulk/${encodeURIComponent(currentBulkJobId)}/retry`, { method: 'POST' }, 20000);
+    pollBulkJob(data.job_id || currentBulkJobId);
+  } catch (e) {
+    setUploadStatus(e.message || 'Could not retry failed files.', true);
+  }
+}
+
+async function uploadArticle() {
+  const publisher = document.getElementById('upload-publisher')?.value || '';
+  const fileInput = document.getElementById('upload-file');
+  const folderInput = document.getElementById('upload-folder');
+  const files = getSelectedUploadFiles();
+  const sourceType = document.getElementById('upload-source-type')?.value || 'development';
+  const language = document.getElementById('upload-language')?.value.trim() || 'en';
+  const btn = document.getElementById('upload-article-btn');
+
+  if (!publisher) {
+    setUploadStatus('Choose an approved publisher before uploading.', true);
+    return;
+  }
+  if (!files.length) {
+    setUploadStatus('Choose a .txt, .docx, or .pdf file.', true);
+    fileInput?.focus();
+    return;
+  }
+
+  const form = new FormData();
+  form.append('publisher_id', publisher);
+  files.forEach(file => form.append(files.length > 1 ? 'files' : 'file', file));
+  form.append('source_type', sourceType);
+  form.append('language', language);
+  form.append('source_origin', files.length > 1 ? 'bulk_import' : 'upload');
+
+  if (btn) btn.disabled = true;
+  setUploadStatus(files.length > 1 ? `Queueing ${files.length} files...` : 'Uploading and indexing...');
+  try {
+    const endpoint = files.length > 1 ? '/api/ingest/bulk-upload' : '/api/ingest/upload';
+    const data = await fetchJsonWithTimeout(`${API}${endpoint}`, {
+      method: 'POST',
+      body: form
+    }, files.length > 1 ? 30000 : 120000);
+    if (data.job_id) {
+      currentBulkJobId = data.job_id;
+      setUploadStatus(`${data.total_files || files.length} files queued for background import.`);
+      await pollBulkJob(data.job_id);
+      return;
+    }
+    const chunks = data.chunks ?? 0;
+    const embedded = data.embedded_chunks ?? 0;
+    const qdrant = data.qdrant_indexed ?? 0;
+    const cats = (data.categories || []).join(', ');
+    setUploadStatus(`${data.title || 'Document'} indexed: ${chunks} chunks, ${embedded} embedded, ${qdrant} sent to Qdrant${cats ? ` - ${cats}` : ''}.`);
+    if (fileInput) fileInput.value = '';
+    if (folderInput) folderInput.value = '';
+    pendingDropFiles = [];
+    loadStats();
+  } catch (e) {
+    setUploadStatus(e.message || 'Upload failed.', true);
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function rebuildMetadata() {
+  const btn = document.getElementById('metadata-rebuild-btn');
+  const status = document.getElementById('metadata-rebuild-status');
+  if (btn) btn.disabled = true;
+  if (status) status.textContent = 'Queueing metadata rebuild...';
+  try {
+    const data = await fetchJsonWithTimeout(`${API}/api/admin/rebuild-metadata`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    }, 30000);
+    currentBulkJobId = data.job_id;
+    if (status) status.textContent = `${data.total_files || 0} documents queued for metadata rebuild.`;
+    await pollBulkJob(data.job_id);
+  } catch (e) {
+    if (status) {
+      status.textContent = e.message || 'Could not start metadata rebuild.';
+      status.classList.add('error');
+    }
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function loadStats() {
+  try {
+    const r = await fetch(`${API}/api/stats`);
+    const d = await r.json();
+    corpusStats = d;
+    document.getElementById('corpus-badge').innerHTML =
+      `<strong>${d.articles}</strong> items · <strong>${d.embedded}</strong> passages<br>` +
+      `${d.date_from?.slice(0,4)}–${d.date_to?.slice(0,4)} · CommonSource`;
+    document.getElementById('article-count').textContent = d.articles;
+    const pill = document.getElementById('tab-article-count');
+    if (pill) pill.textContent = d.articles;
+    if (document.getElementById('results-container')?.querySelector('.welcome')) {
+      showWelcome();
+    }
+  } catch(e) {
+    document.getElementById('corpus-badge').textContent = 'CMA · CommonSource';
+  }
+}
+
+async function loadQwenStatus() {
+  const el = document.getElementById('translation-status');
+  if (!el) return;
+  try {
+    const r = await fetch(`${API}/api/models`);
+    const d = await r.json();
+    if (d.qwen_ready || d.generation_model) {
+      const model = d.primary_model || d.generation_model || 'Gemini Flash';
+      el.textContent = `AI ready (${model})`;
+    } else {
+      el.textContent = d.setup_hint || 'Gemini and local Qwen fallback are unavailable';
+    }
+  } catch {
+    el.textContent = 'Start the API and check Gemini or local Qwen configuration';
+  }
+}
+
+let currentQuery = '';
+let corpusStats = { articles: '2,422' };
+let lastSearchResults = [];
+let lastSearchCount = 0;
+let evidenceAbort = null;
+
+async function fetchJsonWithTimeout(url, options = {}, timeoutMs = 60000) {
+  const controller = new AbortController();
+  const externalSignal = options.signal;
+  const abort = () => controller.abort();
+  if (externalSignal?.aborted) controller.abort();
+  externalSignal?.addEventListener?.('abort', abort, { once: true });
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const fetchOptions = { ...options };
+    delete fetchOptions.auth;
+    const headers = { ...(fetchOptions.headers || {}) };
+    const token = getAccessToken();
+    if (options.auth !== false && token && !headers.Authorization) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+    const method = (fetchOptions.method || 'GET').toUpperCase();
+    const csrfUrl = String(url);
+    const csrfRequired = csrfUrl.includes('/api/feed')
+      || csrfUrl.includes('/api/ingest/upload')
+      || csrfUrl.includes('/api/ingest/bulk')
+      || csrfUrl.includes('/api/admin/')
+      || csrfUrl.includes('/api/qdrant/')
+      || csrfUrl.includes('/api/bookmarks')
+      || csrfUrl.includes('/api/collections')
+      || csrfUrl.includes('/api/notes');
+    if (options.auth !== false && token && csrfRequired && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+      headers['X-CSRF-Token'] = headers['X-CSRF-Token'] || await getCsrfToken();
+    }
+    fetchOptions.headers = headers;
+    const res = await fetch(url, { ...fetchOptions, signal: controller.signal });
+    const data = await res.json().catch(() => ({}));
+    if (res.status === 401 && options.auth !== false) {
+      clearAuthState();
+      updateUserMenu();
+    }
+    if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
+    return data;
+  } finally {
+    clearTimeout(timer);
+    externalSignal?.removeEventListener?.('abort', abort);
+  }
+}
+
+function runSearchFromData(el) {
+  doSearch(el?.dataset?.query || '');
+}
+
+function getSearchFilters() {
+  return {
+    tag: document.getElementById('filter-tag')?.value?.trim() || '',
+    category: document.getElementById('filter-category')?.value?.trim() || '',
+    language: document.getElementById('filter-language')?.value?.trim() || '',
+    document_type: document.getElementById('filter-document-type')?.value?.trim() || '',
+    entity: document.getElementById('filter-entity')?.value?.trim() || '',
+    publisher: document.getElementById('filter-publisher')?.value?.trim() || '',
+    topic: document.getElementById('filter-topic')?.value?.trim() || '',
+  };
+}
+
+function setSearchFilters(filters = {}) {
+  const ids = {
+    tag: 'filter-tag',
+    category: 'filter-category',
+    language: 'filter-language',
+    document_type: 'filter-document-type',
+    entity: 'filter-entity',
+    publisher: 'filter-publisher',
+    topic: 'filter-topic',
+  };
+  Object.entries(ids).forEach(([key, id]) => {
+    const el = document.getElementById(id);
+    if (el && filters[key] !== undefined) el.value = filters[key] || '';
+  });
+}
+
+function hasSearchState(q, filters = {}) {
+  return Boolean((q || '').trim() || Object.values(filters).some(value => String(value || '').trim()));
+}
+
+function persistSearchState(q, filters = {}) {
+  const cleanFilters = Object.fromEntries(
+    Object.entries(filters).map(([key, value]) => [key, String(value || '').trim()])
+  );
+  if (!hasSearchState(q, cleanFilters)) return;
+  const state = { q: String(q || '').trim(), filters: cleanFilters, tab: 'articles', saved_at: Date.now() };
+  localStorage.setItem(LAST_SEARCH_STATE_KEY, JSON.stringify(state));
+
+  const params = new URLSearchParams();
+  if (state.q) params.set('q', state.q);
+  Object.entries(cleanFilters).forEach(([key, value]) => {
+    if (value) params.set(key, value);
+  });
+  const nextUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`;
+  if (`${window.location.pathname}${window.location.search}` !== nextUrl) {
+    history.replaceState(null, '', nextUrl);
+  }
+}
+
+function readLastSearchState() {
+  try {
+    const state = JSON.parse(localStorage.getItem(LAST_SEARCH_STATE_KEY) || 'null');
+    if (!state || Date.now() - Number(state.saved_at || 0) > 7 * 24 * 60 * 60 * 1000) return null;
+    return state;
+  } catch {
+    return null;
+  }
+}
+
+function searchStateFromParams(params) {
+  return {
+    q: params.get('q') || '',
+    filters: {
+      tag: params.get('tag') || '',
+      category: params.get('category') || '',
+      language: params.get('language') || params.get('lang') || '',
+      document_type: params.get('document_type') || params.get('type') || '',
+      entity: params.get('entity') || '',
+      publisher: params.get('publisher') || '',
+      topic: params.get('topic') || '',
+    },
+  };
+}
+
+function applySearchState(state) {
+  const input = document.getElementById('search-input');
+  if (input) input.value = state?.q || '';
+  setSearchFilters(state?.filters || {});
+}
+
+// ── Search + Ask + Timeline ─────────────────────────────────────────────────
+async function doSearch(overrideQuery) {
+  const q = overrideQuery || document.getElementById('search-input').value.trim();
+  const filters = getSearchFilters();
+  const hasFilters = Object.values(filters).some(Boolean);
+  if (!q && !hasFilters) return;
+  const displayQuery = q || 'filtered archive';
+  currentQuery = displayQuery;
+  if (overrideQuery) document.getElementById('search-input').value = q;
+  persistSearchState(q, filters);
+
+  const btn       = document.getElementById('search-btn');
+  const statusEl  = document.getElementById('status');
+  const container = document.getElementById('results-container');
+  const translateBtn = document.getElementById('translate-results-btn');
+  const translationStatus = document.getElementById('translation-status');
+
+  evidenceAbort?.abort();
+  evidenceAbort = null;
+
+  btn.disabled = true;
+  if (translateBtn) translateBtn.disabled = true;
+  if (translationStatus) translationStatus.textContent = '';
+  statusEl.className = 'status loading';
+  statusEl.innerHTML = `<div class="spinner"></div><span>${t('searching')}</span>`;
+  container.innerHTML = '';
+
+  const searchCtrl = new AbortController();
+  const searchTimer = setTimeout(() => searchCtrl.abort(), 90000);
+
+  try {
+    const params = new URLSearchParams({ k: '8' });
+    if (q) params.set('q', q);
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) params.set(key, value);
+    });
+    const searchRes = await fetch(`${API}/api/search?${params.toString()}`, {
+      signal: searchCtrl.signal,
+    });
+    clearTimeout(searchTimer);
+    const searchData = await searchRes.json();
+    if (!searchRes.ok) throw new Error(searchData.error || `Search failed (${searchRes.status})`);
+
+    if (searchData.error) {
+      statusEl.className = 'status error';
+      statusEl.innerHTML = `<div class="status-dot"></div>${searchData.error}`;
+      return;
+    }
+    if (!searchData.results?.length) {
+      statusEl.className = 'status';
+      statusEl.innerHTML = `<div class="status-dot"></div>No results for "${escHtml(displayQuery)}"`;
+      lastSearchResults = [];
+      lastSearchCount = 0;
+      container.innerHTML = `<div class="empty-state"><h3>Nothing found</h3>
+        <p>Try different keywords, or search in Hindi.</p></div>`;
+      return;
+    }
+
+    lastSearchResults = searchData.results;
+    lastSearchCount = searchData.count;
+    if (translateBtn) translateBtn.disabled = false;
+
+    statusEl.className = 'status';
+    statusEl.innerHTML = `<div class="status-dot"></div>${searchData.count} sources for "<strong>${escHtml(q)}</strong>" · Gemini building evidence layers…`;
+
+    if (hasFilters) {
+      statusEl.innerHTML = `<div class="status-dot"></div>${searchData.count} filtered sources for "<strong>${escHtml(displayQuery)}</strong>"`;
+    }
+    if (!hasFilters && !hasPaidAccess()) {
+      statusEl.innerHTML = `<div class="status-dot"></div>${searchData.count} sources for "<strong>${escHtml(q)}</strong>"`;
+    }
+
+    container.innerHTML = `
+      <div id="timeline-slot"></div>
+      <div id="layered-slot" class="ai-answer">
+        <div class="ai-answer-label">
+          <span class="ai-label-text">Evidence Layers</span>
+        </div>
+        <div class="ai-answer-text" style="color:var(--light); font-style:italic;">Gemini is synthesising the layered view…</div>
+      </div>
+      ${renderArcPanel(q)}
+      <div class="sources-label">All matching sources</div>
+      <div class="results" id="search-results-list">${lastSearchResults.map(renderResult).join('')}</div>`;
+    refreshBookmarkButtons();
+
+    if (hasFilters) {
+      document.getElementById('timeline-slot')?.remove();
+      document.getElementById('layered-slot')?.remove();
+      document.querySelector('.arc-panel')?.remove();
+    } else if (hasPaidAccess()) {
+      loadEvidencePanels(q, searchData.count);
+    } else {
+      document.getElementById('timeline-slot')?.remove();
+      const layeredSlot = document.getElementById('layered-slot');
+      if (layeredSlot) layeredSlot.outerHTML = renderPaywallPanel('Evidence Layers');
+      const arcPanel = document.querySelector('.arc-panel');
+      if (arcPanel) arcPanel.outerHTML = renderPaywallPanel('Story Arc');
+    }
+
+  } catch(e) {
+    clearTimeout(searchTimer);
+    statusEl.className = 'status error';
+    const msg = e.name === 'AbortError'
+      ? 'Search timed out — the server may be busy. Wait a moment and try again.'
+      : (e.message || 'Could not reach API — is the server running on port 5050?');
+    statusEl.innerHTML = `<div class="status-dot"></div>${escHtml(msg)}`;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function loadEvidencePanels(q, count) {
+  const statusEl  = document.getElementById('status');
+  const timelineSlot = document.getElementById('timeline-slot');
+  const layeredSlot = document.getElementById('layered-slot');
+  const searchAtStart = q;
+
+  const ac = new AbortController();
+  evidenceAbort = ac;
+
+  let timelineData = null;
+  try {
+    timelineData = await fetchJsonWithTimeout(
+      `${API}/api/timeline?q=${encodeURIComponent(q)}`,
+      { signal: ac.signal },
+      12000
+    );
+  } catch (e) {
+    if (currentQuery === searchAtStart && timelineSlot) timelineSlot.innerHTML = '';
+  }
+
+  if (currentQuery !== searchAtStart || ac.signal.aborted) return;
+
+  if (timelineSlot && timelineData?.by_year && Object.keys(timelineData.by_year).length > 1) {
+    timelineSlot.innerHTML = renderTimeline(q, timelineData);
+  } else if (timelineSlot) {
+    timelineSlot.innerHTML = '';
+  }
+
+  let layeredSettled;
+  try {
+    const data = await fetchJsonWithTimeout(
+      `${API}/api/ask/layered?q=${encodeURIComponent(q)}&timeout=120`,
+      { signal: ac.signal },
+      130000
+    );
+    layeredSettled = { status: 'fulfilled', value: data };
+  } catch (e) {
+    layeredSettled = { status: 'rejected', reason: e };
+  } finally {
+    if (evidenceAbort === ac) evidenceAbort = null;
+  }
+
+  if (currentQuery !== searchAtStart || ac.signal.aborted) return;
+
+  if (layeredSettled.status === 'fulfilled' && layeredSlot) {
+    const layeredData = layeredSettled.value;
+    const hasLayers = layeredData.layers && Object.keys(layeredData.layers).length > 0;
+    if (hasLayers) {
+      layeredSlot.outerHTML = renderLayeredAnswer(layeredData);
+      activateLayer('news');
+      const modelLabel = layeredData.model ? ` · ${layeredData.model}` : '';
+      statusEl.className = 'status';
+      statusEl.innerHTML = `<div class="status-dot"></div>${count} sources for "<strong>${escHtml(q)}</strong>"${modelLabel}`;
+    } else if (layeredData.warning) {
+      layeredSlot.innerHTML = `
+        <div class="ai-answer-label"><span class="ai-label-text">Evidence Layers</span></div>
+        <div class="ai-answer-text" style="color:var(--light);">${escHtml(layeredData.warning)}</div>`;
+      statusEl.innerHTML = `<div class="status-dot"></div>${count} sources for "<strong>${escHtml(q)}</strong>"`;
+    } else {
+      layeredSlot.remove();
+      statusEl.innerHTML = `<div class="status-dot"></div>${count} sources for "<strong>${escHtml(q)}</strong>"`;
+    }
+  } else if (layeredSlot) {
+    const err = layeredSettled.reason;
+    if (ac.signal.aborted && currentQuery !== searchAtStart) return;
+    const msg = err?.name === 'AbortError'
+      ? 'Model timed out (120s). It might still be loading or the server is under heavy load.'
+      : (err?.message || 'Layered synthesis unavailable');
+    layeredSlot.innerHTML = `
+      <div class="ai-answer-label"><span class="ai-label-text">Evidence Layers</span></div>
+      <div class="ai-answer-text" style="color:var(--light); font-style:italic;">${escHtml(msg)}. Search results are ready below.</div>`;
+    statusEl.innerHTML = `<div class="status-dot"></div>${count} sources for "<strong>${escHtml(q)}</strong>"`;
+  }
+}
+
+async function translateVisibleResults() {
+  if (!lastSearchResults.length) return;
+
+  const targetEl = document.getElementById('translate-target');
+  const btn = document.getElementById('translate-results-btn');
+  const statusEl = document.getElementById('translation-status');
+  const listEl = document.getElementById('search-results-list');
+  const target = targetEl?.value || 'hi';
+  const targetLabel = targetEl?.selectedOptions?.[0]?.textContent || target;
+  const count = Math.min(lastSearchResults.length, 8);
+
+  btn.disabled = true;
+  statusEl.textContent = `Translating ${count} visible source${count === 1 ? '' : 's'} to ${targetLabel}…`;
+
+  const items = lastSearchResults.slice(0, count).map((r, i) => ({
+    id: String(i),
+    text: `Title: ${r.title || 'Untitled'}\nExcerpt: ${r.excerpt || ''}`,
+  }));
+
+  try {
+    const data = await fetchJsonWithTimeout(`${API}/api/translate?timeout=120`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ target, items }),
+    }, 130000);
+
+    if (!Array.isArray(data.translations) || !data.translations.length) {
+      throw new Error('No translations returned from the server');
+    }
+
+    data.translations.forEach(item => {
+      const idx = Number(item.id);
+      if (!Number.isFinite(idx) || !lastSearchResults[idx]) return;
+      const parsed = parseTranslatedSource(item.translation || '');
+      lastSearchResults[idx] = {
+        ...lastSearchResults[idx],
+        translated_title: parsed.title || lastSearchResults[idx].title,
+        translated_excerpt: parsed.excerpt || item.translation || lastSearchResults[idx].excerpt,
+        translation_language: data.target_language || targetLabel,
+        translation_code: target,
+      };
+    });
+
+    if (listEl) listEl.innerHTML = lastSearchResults.map(renderResult).join('');
+    statusEl.textContent = `Translated ${count} result${count === 1 ? '' : 's'} to ${data.target_language || targetLabel}`;
+  } catch(e) {
+    const msg = e.name === 'AbortError'
+      ? 'Translation timed out — try fewer results.'
+      : (e.message || e);
+    statusEl.textContent = `Translation unavailable: ${msg}`;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function parseTranslatedSource(text) {
+  const cleaned = (text || '').trim();
+  const titleMatch = cleaned.match(/(?:^|\n)\s*(?:Title|शीर्षक|शीर्षक:)\s*[:：]\s*(.+)/i);
+  const excerptMatch = cleaned.match(/(?:^|\n)\s*(?:Excerpt|अंश|उद्धरण)\s*[:：]\s*([\s\S]+)/i);
+  if (titleMatch || excerptMatch) {
+    return {
+      title: titleMatch ? titleMatch[1].trim() : '',
+      excerpt: excerptMatch ? excerptMatch[1].trim() : '',
+    };
+  }
+  return { title: '', excerpt: cleaned };
+}
+
+// ── Timeline ────────────────────────────────────────────────────────────────
+function renderTimeline(q, data) {
+  const years  = Object.keys(data.by_year).sort();
+  const counts = years.map(y => data.by_year[y].count);
+  const max    = Math.max(...counts, 1);
+
+  const bars = years.map(yr => {
+    const cnt = data.by_year[yr].count;
+    const h   = Math.max(Math.round((cnt / max) * 56), 3);
+    return `<div class="tbar-wrap" data-query="${escHtml(`${q} ${yr}`)}" onclick="runSearchFromData(this)">
+      <span class="tbar-count">${cnt}</span>
+      <div class="tbar" style="height:${h}px"></div>
+      <span class="tbar-year">${yr}</span>
+    </div>`;
+  }).join('');
+
+  return `<div class="timeline-panel">
+    <div class="timeline-header">
+      <span class="timeline-title">Coverage over time</span>
+    </div>
+    <div class="timeline-total">${data.total} articles matched</div>
+    <div class="timeline-bars">${bars}</div>
+  </div>`;
+}
+
+// ── Entity tags ──────────────────────────────────────────────────────────────
+function renderEntities(entities) {
+  if (!entities || (!entities.people?.length && !entities.organisations?.length && !entities.places?.length)) return '';
+  let html = '<div class="entities-row">';
+  if (entities.people?.length) {
+    html += `<span class="entity-group-label">People</span>`;
+    html += entities.people.slice(0,6).map(p =>
+      `<span class="entity-tag person" data-query="${escHtml(p)}" onclick="runSearchFromData(this)">${escHtml(p)}</span>`).join('');
+  }
+  if (entities.organisations?.length) {
+    html += `<span class="entity-group-label" style="margin-left:8px">Orgs</span>`;
+    html += entities.organisations.slice(0,5).map(o =>
+      `<span class="entity-tag org" data-query="${escHtml(o)}" onclick="runSearchFromData(this)">${escHtml(o)}</span>`).join('');
+  }
+  if (entities.places?.length) {
+    html += `<span class="entity-group-label" style="margin-left:8px">Places</span>`;
+    html += entities.places.slice(0,5).map(p =>
+      `<span class="entity-tag place" data-query="${escHtml(p)}" onclick="runSearchFromData(this)">${escHtml(p)}</span>`).join('');
+  }
+  html += '</div>';
+  return html;
+}
+
+// ── AI answer ────────────────────────────────────────────────────────────────
+function renderAIAnswer(answer, model, entities) {
+  const formatted = escHtml(answer || '').replace(/\[Source (\d+)\]/g, '<sup title="Source $1">[$1]</sup>');
+  const badge = model ? `<span class="ai-model-badge">${escHtml(model)}</span>` : '';
+  return `<div class="ai-answer">
+    <div class="ai-answer-label">
+      <span class="ai-label-text">AI Synthesis</span>${badge}
+    </div>
+    <div class="ai-answer-text">${formatted}</div>
+    ${renderEntities(entities)}
+    <div class="ai-caveat">Generated from source excerpts only · Verify with original articles below</div>
+  </div>`;
+}
+
+// ── Five-layer evidence panel ────────────────────────────────────────────────
+
+const LAYER_META = {
+  news:        { label: 'News & Media',       desc: 'What local journalism and community media are reporting' },
+  development: { label: 'NGO & Development',   desc: 'What CSO reports, evaluations, and programme data show' },
+  community:   { label: "People's Voice",      desc: 'Community radio, testimony, grievances, lived experience' },
+  official:    { label: 'Official Record',     desc: 'Government data, schemes, dashboards, policy documents' },
+  gaps:        { label: 'Contradictions & Gaps', desc: 'Where sources overlap, diverge, and what to investigate next' },
+};
+
+function renderBreakup(sources) {
+  if (!sources?.length) return '';
+  const chips = sources.slice(0, 4).map((s, i) => {
+    const title = s.title || s.publication || `Source ${i + 1}`;
+    const meta = [s.publication, s.author, s.date].filter(Boolean).join(' · ');
+    return `<div class="layer-source-chip" title="${escHtml(meta)}">
+      <strong>${i + 1}.</strong> ${escHtml(title)}
+    </div>`;
+  }).join('');
+  return `<div class="layer-sources">${chips}</div>`;
+}
+
+function renderLayeredAnswer(data) {
+  const layers = data.layers || {};
+  const gaps   = data.gaps   || '';
+  const model  = data.model  || '';
+  const badge  = model ? `<span class="ai-model-badge">${escHtml(model)}</span>` : '';
+  const ORDER  = ['news', 'development', 'community', 'official'];
+
+  const cards = ORDER.map((ltype, i) => {
+    const ldata   = layers[ltype] || {};
+    const meta    = LAYER_META[ltype] || {};
+    const summary = escHtml(ldata.summary || 'No sources found for this layer.')
+                      .replace(/\[Source (\d+)\]/g, '<sup>[$1]</sup>');
+    const breakup  = renderBreakup(ldata.sources || []);
+    const collapsed = i > 0 ? ' collapsed' : '';
+    return `<div class="layer-card${collapsed}" data-layer="${ltype}">
+      <div class="layer-card-header" onclick="toggleLayer(this.parentElement)">
+        <span class="layer-pip"></span>
+        <span class="layer-card-label">${escHtml(meta.label || ltype)}</span>
+        <span class="layer-card-desc">${escHtml(meta.desc || '')}</span>
+        <span class="layer-chevron">&#9662;</span>
+      </div>
+      <div class="layer-card-body">
+        <div class="layer-summary">${summary}</div>
+        ${breakup}
+      </div>
+    </div>`;
+  }).join('');
+
+  const gapsFormatted = escHtml(gaps || 'Insufficient sources for gap analysis.')
+    .replace(/WHERE THEY OVERLAP:/g,        '<strong>Where they overlap:</strong>')
+    .replace(/WHERE THEY DIVERGE:/g,         '<strong>Where they diverge:</strong>')
+    .replace(/WHAT IS MISSING OR UNCLEAR:/g, '<strong>What is missing or unclear:</strong>')
+    .replace(/WHAT TO INVESTIGATE NEXT:/g,   '<strong>What to investigate next:</strong>');
+
+  const gapsCard = `<div class="layer-card collapsed" data-layer="gaps">
+    <div class="layer-card-header" onclick="toggleLayer(this.parentElement)">
+      <span class="layer-pip"></span>
+      <span class="layer-card-label">${LAYER_META.gaps.label}</span>
+      <span class="layer-card-desc">${LAYER_META.gaps.desc}</span>
+      <span class="layer-chevron">&#9662;</span>
+    </div>
+    <div class="layer-card-body">
+      <div class="gaps-text">${gapsFormatted}</div>
+    </div>
+  </div>`;
+
+  return `<div class="ai-answer" id="layered-answer">
+    <div class="ai-answer-label">
+      <span class="ai-label-text">Evidence Layers</span>${badge}
+    </div>
+    ${cards}
+    ${gapsCard}
+    <div class="ai-caveat">Synthesised from verified sources only · Click any layer to expand · Verify with originals below</div>
+  </div>`;
+}
+
+function toggleLayer(card) {
+  card.classList.toggle('collapsed');
+}
+
+function activateLayer() {}
+
+
+// ── Story arc ────────────────────────────────────────────────────────────────
+function renderArcPanel(q) {
+  return `<div class="arc-panel" id="arc-panel">
+    <div class="arc-label">
+      <div class="arc-label-left">
+        <span class="arc-label-text">Story Arc</span>
+      </div>
+      <button class="arc-btn" id="arc-btn" data-query="${escHtml(q)}" onclick="loadArc(this.dataset.query)">
+        How did this story develop? →
+      </button>
+    </div>
+    <div id="arc-content" class="arc-placeholder"></div>
+  </div>`;
+}
+
+async function loadArc(q) {
+  const btn     = document.getElementById('arc-btn');
+  const content = document.getElementById('arc-content');
+  if (!btn || !content) return;
+  btn.disabled = true;
+  btn.textContent = t('generating_arc');
+  content.innerHTML = '<div class="spinner" style="display:inline-block"></div>';
+  try {
+    const data = await fetchJsonWithTimeout(`${API}/api/arc?q=${encodeURIComponent(q)}&timeout=120`, {}, 130000);
+    if (data.error) { content.textContent = data.error; return; }
+    const formatted = escHtml(data.narrative || '').replace(/\[Source (\d+)\]/g, '<sup>[$1]</sup>');
+    content.innerHTML = `<div class="arc-narrative">${formatted}</div>`;
+    btn.style.display = 'none';
+  } catch(e) {
+    content.textContent = e.name === 'AbortError'
+      ? 'Story arc timed out. Search results are still available below.'
+      : `Could not generate arc: ${e.message || e}`;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function renderCitedSources(sources) {
+  const cards = sources.map((r, i) => {
+    const date    = formatDate(r.date);
+    const author  = r.author   ? `<span class="prov-sep">·</span><span class="prov-author">${escHtml(r.author)}</span>` : '';
+    const dateEl  = date       ? `<span class="prov-sep">·</span><span class="prov-date">${escHtml(date)}</span>` : '';
+    const typeLabel = sourceTypeLabel(r.content_type);
+    const typeTag   = typeLabel ? `<span class="prov-tag">${escHtml(typeLabel)}</span>` : '';
+    const familyTag = r.source_family ? `<span class="prov-tag">${escHtml(sourceFamilyLabel(r.source_family))}</span>` : '';
+    const mediumTag = r.source_medium ? `<span class="prov-tag">${escHtml(sourceTypeLabel(r.source_medium))}</span>` : '';
+    const themeTag  = r.theme ? `<span class="prov-tag">${escHtml(r.theme)}</span>` : '';
+    const title   = r.title || 'Untitled';
+    const excerpt = r.excerpt  ? escHtml(r.excerpt) : '';
+    const sourceLink = renderSourceLink(r);
+    const docId = documentIdForResult(r);
+    const openButton = renderOpenDocumentButton(docId);
+    const bookmarkButton = renderBookmarkButton(docId);
+    const cardAttrs = docId ? ` data-document-id="${escHtml(docId)}"` : '';
+    const cardClass = docId ? ' result-card-clickable' : '';
+    return `
+      <div class="result-card cited-source-card${cardClass}"${cardAttrs}>
+        <div class="cited-source-num">[${i + 1}]</div>
+        <div class="cited-source-body">
+          <div class="result-provenance">
+            <span class="pub-name">${escHtml(r.publication || 'Unknown source')}</span>
+            ${author}${dateEl}${familyTag}${typeTag}${mediumTag}${themeTag}
+          </div>
+          <div class="result-title">${escHtml(title)}</div>
+          <div class="result-excerpt">${excerpt}</div>
+          <div class="result-footer">
+            <div class="result-footer-actions">${openButton}${bookmarkButton}${sourceLink}</div>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+  return `<div class="sources-label">Sources cited in this answer</div>
+    <div class="results cited-sources">${cards}</div>`;
+}
+
+function sourceHref(r) {
+  if (r.url) return r.url;
+  if (r.archive_url) return `${API}${r.archive_url}`;
+  return '';
+}
+
+function documentIdForResult(r) {
+  return r?.document_id || r?.asset_id || r?.id || '';
+}
+
+function documentHref(documentId, language = '') {
+  const href = `${API}/document/${encodeURIComponent(documentId)}`;
+  return language ? `${href}?lang=${encodeURIComponent(language)}` : href;
+}
+
+function openDocument(documentId, language = '') {
+  if (!documentId) return;
+  window.location.href = documentHref(documentId, language);
+}
+
+function renderOpenDocumentButton(documentId, language = '') {
+  if (!documentId) return '';
+  return `<button class="open-document-btn" type="button" data-document-open="${escHtml(documentId)}" data-document-lang="${escHtml(language)}">Open Document</button>`;
+}
+
+function renderBookmarkButton(documentId) {
+  if (!documentId) return '';
+  return `<button class="open-document-btn bookmark-btn" type="button" data-bookmark-document="${escHtml(documentId)}">Save</button>`;
+}
+
+async function refreshBookmarkButtons() {
+  if (!getAccessToken()) return;
+  const buttons = [...document.querySelectorAll('[data-bookmark-document]')];
+  if (!buttons.length) return;
+  try {
+    const data = await fetchJsonWithTimeout(`${API}/api/bookmarks`, {}, 15000);
+    const byDocument = new Map((data.bookmarks || []).map(item => [item.document_id, item.bookmark_id]));
+    buttons.forEach(btn => {
+      const bookmarkId = byDocument.get(btn.dataset.bookmarkDocument);
+      btn.dataset.bookmarkId = bookmarkId || '';
+      btn.textContent = bookmarkId ? 'Saved' : 'Save';
+      btn.classList.toggle('saved', !!bookmarkId);
+    });
+  } catch {
+    // Bookmarks are an authenticated enhancement; search still works without them.
+  }
+}
+
+async function toggleBookmarkButton(btn) {
+  const documentId = btn.dataset.bookmarkDocument || '';
+  if (!documentId) return;
+  if (!getAccessToken()) {
+    window.location.href = '/login';
+    return;
+  }
+  btn.disabled = true;
+  try {
+    const bookmarkId = btn.dataset.bookmarkId || '';
+    if (bookmarkId) {
+      await fetchJsonWithTimeout(`${API}/api/bookmarks/${encodeURIComponent(bookmarkId)}`, { method: 'DELETE' }, 20000);
+      btn.dataset.bookmarkId = '';
+      btn.textContent = 'Save';
+      btn.classList.remove('saved');
+    } else {
+      const data = await fetchJsonWithTimeout(`${API}/api/bookmarks`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ document_id: documentId }),
+      }, 20000);
+      btn.dataset.bookmarkId = data.bookmark?.id || '';
+      btn.textContent = 'Saved';
+      btn.classList.add('saved');
+    }
+  } catch (err) {
+    alert(err.message || 'Could not update bookmark');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function renderSourceLink(r) {
+  const href = sourceHref(r);
+  if (!href) return `<span class="translation-mark">Archive metadata only</span>`;
+  const label = r.link_label || (r.url ? 'Open original source' : 'Open archive file');
+  return `<a class="result-link" data-no-open="true" href="${escHtml(href)}" target="_blank" rel="noopener">${escHtml(label)} -></a>`;
+}
+
+function sourceTypeLabel(value) {
+  const labels = {
+    article: 'Article',
+    magazine_article: 'Magazine article',
+    radio_script: 'Radio script',
+    audio_transcript: 'Audio transcript',
+    research_report: 'Research report',
+    policy_brief: 'Policy brief',
+    official_record: 'Official record',
+    report: 'Report',
+    magazine: 'Magazine',
+    radio: 'Radio',
+    web: 'Web',
+    document: 'Document'
+  };
+  return labels[value] || '';
+}
+
+function sourceFamilyLabel(value) {
+  return String(value || '')
+    .split('-')
+    .filter(Boolean)
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
+function renderResult(r) {
+  const date     = formatDate(r.date);
+  const location = r.location ? `<span class="prov-location">${escHtml(r.location)}</span>` : '';
+  const author   = r.author   ? `<span class="prov-sep">·</span><span class="prov-author">${escHtml(r.author)}</span>` : '';
+  const dateEl   = date       ? `<span class="prov-sep">·</span><span class="prov-date">${escHtml(date)}</span>` : '';
+  const typeLabel = sourceTypeLabel(r.content_type);
+  const typeTag   = typeLabel ? `<span class="prov-tag">${escHtml(typeLabel)}</span>` : '';
+  const familyTag = r.source_family ? `<span class="prov-tag">${escHtml(sourceFamilyLabel(r.source_family))}</span>` : '';
+  const mediumTag = r.source_medium ? `<span class="prov-tag">${escHtml(sourceTypeLabel(r.source_medium))}</span>` : '';
+  const themeTag  = r.theme ? `<span class="prov-tag">${escHtml(r.theme)}</span>` : '';
+  const categoryTag = r.category ? `<span class="prov-tag">${escHtml(r.category)}</span>` : '';
+  const docTypeTag = r.document_type ? `<span class="prov-tag">${escHtml(r.document_type)}</span>` : '';
+  const langTag = r.language ? `<span class="prov-tag">${escHtml(r.language)}</span>` : '';
+  const translatedTag = r.translation_language ? `<span class="prov-tag">Translated: ${escHtml(r.translation_language)}</span>` : '';
+  const title    = r.translated_title || r.title || 'Untitled';
+  const excerpt  = r.translated_excerpt || r.excerpt ? escHtml(r.translated_excerpt || r.excerpt) : '';
+  const pct      = Math.round(r.score * 100);
+  const linkEl = renderSourceLink(r);
+  const docId = documentIdForResult(r);
+  const translationCode = r.translation_code || '';
+  const openButton = renderOpenDocumentButton(docId, translationCode);
+  const bookmarkButton = renderBookmarkButton(docId);
+  const cardAttrs = docId ? ` data-document-id="${escHtml(docId)}" data-document-lang="${escHtml(translationCode)}"` : '';
+  const cardClass = docId ? ' result-card-clickable' : '';
+
+  return `
+    <div class="result-card${cardClass}"${cardAttrs}>
+      <div class="result-provenance">
+        <span class="pub-name">${escHtml(r.publication)}</span>
+        ${author}${dateEl}${location}${familyTag}${typeTag}${mediumTag}${categoryTag}${docTypeTag}${langTag}${themeTag}${translatedTag}
+      </div>
+      <div class="result-title">${escHtml(title)}</div>
+      <div class="result-excerpt">${excerpt}</div>
+      <div class="result-footer">
+        <div class="result-footer-actions">${openButton}${bookmarkButton}${linkEl}</div>
+        <div class="relevance-bar">
+          <div class="relevance-fill" style="width:${Math.min(pct * 1.5, 100)}%"></div>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ── Welcome state ──────────────────────────────────────────────────────────
+function showWelcome() {
+  document.getElementById('results-container').innerHTML = '';
+}
+
+// ── Keyboard shortcut ──────────────────────────────────────────────────────
+document.getElementById('search-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doSearch();
+});
+
+document.addEventListener('click', e => {
+  const target = e.target instanceof Element ? e.target : null;
+  if (!target) return;
+  const bookmarkBtn = target.closest('[data-bookmark-document]');
+  if (bookmarkBtn) {
+    toggleBookmarkButton(bookmarkBtn);
+    return;
+  }
+  const openBtn = target.closest('[data-document-open]');
+  if (openBtn) {
+    openDocument(openBtn.dataset.documentOpen || '', openBtn.dataset.documentLang || '');
+    return;
+  }
+  const card = target.closest('.result-card[data-document-id]');
+  if (!card || target.closest('a, button, input, select, textarea, [data-no-open]')) return;
+  openDocument(card.dataset.documentId || '', card.dataset.documentLang || '');
+});
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+function escHtml(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function formatDate(d) {
+  if (!d) return '';
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const parts = d.split('-');
+  if (parts.length === 3) {
+    const m = parseInt(parts[1], 10);
+    return `${months[m-1]} ${parts[2] === '01' && parts[1] ? '' : parts[2] + ' '}${parts[0]}`.trim();
+  }
+  return d;
+}
+
+// ── i18n ───────────────────────────────────────────────────────────────────
+let LANG = 'en';
+
+const I18N = {
+  en: {
+    tagline:           'Bringing the voice of community media to the world',
+    tab_articles:      'Search',
+    tab_stats:         'Stats',
+    tab_diagnostics:   'Diagnostics',
+    tab_health:        'Health',
+    tab_scriptwriter:  'Script Writer',
+    tab_admin:         'Admin',
+    search_btn:        'Search',
+    search_placeholder:'Search the archive…',
+    search_hint:       'items indexed from CommonSource',
+    ai_label:          'AI Synthesis',
+    arc_label:         'Story Arc',
+    arc_btn:           'How did this story develop? →',
+    sources_label:     'Sources',
+    timeline_title:    'Coverage over time',
+    read_original:     'Read original →',
+    sw_format:         'Format',
+    sw_language:       'Language',
+    sw_duration:       'Duration / length',
+    sw_topic_label:    'Topic or brief',
+    sw_topic_placeholder: 'e.g. Water scarcity in Bundelkhand and what communities are doing about it',
+    sw_start:          'Start writing →',
+    sw_reply_placeholder: 'Reply, give feedback, or ask for a rewrite…',
+    sw_send:           'Send',
+    sw_intro_title:    'Script Writer',
+    sw_intro_desc:     'Write radio scripts, community health bulletins, or documentary treatments — guided by Gemini and grounded in the CommonSource archive.',
+    sw_welcome_1:      'Choose your format and topic on the left, then hit <strong>Start writing</strong>.',
+    sw_welcome_2:      'Gemini will guide you through the script step by step — opening, structure, key scenes, sourcing — drawing on real reporting from the CommonSource archive.',
+    fmt_radio:         'Radio programme',
+    fmt_health:        'Health bulletin',
+    fmt_documentary:   'Documentary treatment',
+    fmt_explainer:     'Community explainer',
+    lang_english:      'English',
+    lang_hindi:        'Hindi',
+    lang_bilingual:    'Bilingual',
+    footer_text:       'CommonSource — a Community Media Alliance product. Bringing the voice of community media to the world.',
+    you_label:         'You',
+    qwen_label:        'Gemini · CommonSource',
+    generating_arc:    'Generating arc…',
+    no_results_title:  'Nothing found',
+    no_results_desc:   'Try different keywords, or search in Hindi.',
+    searching:         'Searching sources…',
+    starting_script:   'Starting…',
+  },
+  hi: {
+    tagline:           'सामुदायिक मीडिया की आवाज़ को दुनिया तक पहुँचाना',
+    tab_articles:      'Search',
+    tab_stats:         'Stats',
+    tab_diagnostics:   'Diagnostics',
+    tab_health:        'Health',
+    tab_scriptwriter:  'स्क्रिप्ट लेखक',
+    tab_admin:         'Admin',
+    search_btn:        'खोजें',
+    search_placeholder:'स्थानीय रिपोर्टिंग खोजें… जैसे \'कश्मीर कर्फ्यू\' या \'विदर्भ किसान आत्महत्या\'',
+    search_hint:       'हार्डन्यूज़ के लेख सूचीबद्ध',
+    ai_label:          'AI सारांश',
+    arc_label:         'कहानी का विकास',
+    arc_btn:           'यह कहानी कैसे विकसित हुई? →',
+    sources_label:     'स्रोत',
+    timeline_title:    'समय के साथ कवरेज',
+    read_original:     'मूल पढ़ें →',
+    sw_format:         'प्रारूप',
+    sw_language:       'भाषा',
+    sw_duration:       'अवधि',
+    sw_topic_label:    'विषय या संक्षिप्त विवरण',
+    sw_topic_placeholder: 'जैसे: बुंदेलखंड में जल संकट और समुदाय क्या कर रहे हैं',
+    sw_start:          'लिखना शुरू करें →',
+    sw_reply_placeholder: 'जवाब दें, सुझाव दें, या दोबारा लिखने को कहें…',
+    sw_send:           'भेजें',
+    sw_intro_title:    'स्क्रिप्ट लेखक',
+    sw_intro_desc:     'रेडियो स्क्रिप्ट, सामुदायिक स्वास्थ्य बुलेटिन, या डॉक्युमेंटरी लिखें — Gemini की सहायता से, CommonSource संग्रह पर आधारित।',
+    sw_welcome_1:      'बाईं ओर प्रारूप और विषय चुनें, फिर <strong>लिखना शुरू करें</strong> दबाएं।',
+    sw_welcome_2:      'Gemini आपको कदम-दर-कदम स्क्रिप्ट लिखने में मदद करेगा — शुरुआत, संरचना, मुख्य दृश्य — CommonSource संग्रह की असली रिपोर्टिंग के आधार पर।',
+    fmt_radio:         'रेडियो कार्यक्रम',
+    fmt_health:        'स्वास्थ्य बुलेटिन',
+    fmt_documentary:   'डॉक्युमेंटरी ट्रीटमेंट',
+    fmt_explainer:     'सामुदायिक व्याख्या',
+    lang_english:      'अंग्रेज़ी',
+    lang_hindi:        'हिन्दी',
+    lang_bilingual:    'द्विभाषी',
+    footer_text:       'CommonSource — कम्युनिटी मीडिया अलायंस का उत्पाद। सामुदायिक मीडिया की आवाज़ को दुनिया तक पहुँचाना।',
+    you_label:         'आप',
+    qwen_label:        'Gemini · CommonSource',
+    generating_arc:    'कहानी तैयार हो रही है…',
+    no_results_title:  'कुछ नहीं मिला',
+    no_results_desc:   'अलग शब्द आज़माएं, या हिन्दी में खोजें।',
+    searching:         'स्रोत खोजे जा रहे हैं…',
+    starting_script:   'शुरू हो रहा है…',
+  }
+};
+
+function t(key) { return I18N[LANG][key] || I18N.en[key] || key; }
+
+function startTypewriterPlaceholder(input, examples) {
+  if (!input || input.dataset.typewriterStarted === '1' || !examples.length) return;
+  input.dataset.typewriterStarted = '1';
+  const basePlaceholder = input.getAttribute('placeholder') || t('search_placeholder');
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+    input.placeholder = examples[0];
+    return;
+  }
+  let exampleIndex = 0;
+  let charIndex = 0;
+  let deleting = false;
+  let paused = false;
+  const tick = () => {
+    if (input.value.trim()) {
+      window.setTimeout(tick, 900);
+      return;
+    }
+    const phrase = examples[exampleIndex];
+    input.placeholder = `${phrase.slice(0, charIndex)}|`;
+    if (paused) {
+      paused = false;
+      deleting = true;
+      window.setTimeout(tick, 950);
+      return;
+    }
+    if (!deleting && charIndex < phrase.length) {
+      charIndex += 1;
+      window.setTimeout(tick, 52);
+      return;
+    }
+    if (!deleting && charIndex >= phrase.length) {
+      paused = true;
+      window.setTimeout(tick, 1100);
+      return;
+    }
+    if (deleting && charIndex > 0) {
+      charIndex -= 1;
+      window.setTimeout(tick, 24);
+      return;
+    }
+    deleting = false;
+    exampleIndex = (exampleIndex + 1) % examples.length;
+    input.placeholder = basePlaceholder;
+    window.setTimeout(tick, 260);
+  };
+  tick();
+}
+
+function setLang(lang) {
+  LANG = lang;
+  document.getElementById('lang-en').classList.toggle('active', lang === 'en');
+  document.getElementById('lang-hi').classList.toggle('active', lang === 'hi');
+
+  // Update all tagged elements
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    const val = t(key);
+    // Preserve pill spans inside tab buttons
+    const pill = el.querySelector('.tab-pill');
+    if (pill) {
+      el.childNodes.forEach(n => { if (n.nodeType === 3) n.textContent = val + ' '; });
+    } else {
+      el.innerHTML = val;
+    }
+  });
+
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    el.placeholder = t(el.dataset.i18nPlaceholder);
+  });
+
+  // Update script writer format/language option labels
+  const fmtMap = { radio: 'fmt_radio', health: 'fmt_health', documentary: 'fmt_documentary', explainer: 'fmt_explainer' };
+  document.querySelectorAll('#sw-format .sw-option').forEach(o => {
+    const key = fmtMap[o.dataset.val];
+    if (key) o.textContent = t(key);
+  });
+  const langMap = { English: 'lang_english', Hindi: 'lang_hindi', Bilingual: 'lang_bilingual' };
+  document.querySelectorAll('#sw-lang .sw-option').forEach(o => {
+    const key = langMap[o.dataset.val];
+    if (key) o.textContent = t(key);
+  });
+
+  // Update ai/arc labels if visible
+  document.querySelectorAll('.ai-label-text').forEach(el => el.textContent = t('ai_label'));
+  document.querySelectorAll('.arc-label-text').forEach(el => el.textContent = t('arc_label'));
+  document.querySelectorAll('.sources-label').forEach(el => el.textContent = t('sources_label'));
+  document.querySelectorAll('.timeline-title').forEach(el => el.textContent = t('timeline_title'));
+
+  // Refresh welcome if on articles tab
+  const resultsContainer = document.getElementById('results-container');
+  if (resultsContainer?.querySelector('.welcome')) showWelcome();
+
+  // Refresh script writer welcome if no chat started
+  const swMsgs = document.getElementById('sw-messages');
+  if (swMsgs?.querySelector('.sw-welcome')) {
+    swMsgs.innerHTML = `<div class="sw-welcome">
+      <p>${t('sw_welcome_1')}</p>
+      <p>${t('sw_welcome_2')}</p>
+    </div>`;
+  }
+}
+
+// ── Model warmup ───────────────────────────────────────────────────────────
+// Fires silently on page load so the model is hot before the user's first request
+let modelWarmed = false;
+async function warmupModel() {
+  const token = getAccessToken();
+  if (!hasPaidAccess() || !token) return;
+  try {
+    await fetch(`${API}/api/generate?mode=script_writer&timeout=30`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ prompt: 'hi', max_tokens: 1, mode: 'script_writer' })
+    });
+    modelWarmed = true;
+  } catch(e) { /* silent */ }
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────
+loadStats();
+loadQwenStatus();
+showWelcome();
+startTypewriterPlaceholder(document.getElementById('search-input'), [
+  'Try: dengue radio scripts',
+  'Ask: maternal health reports',
+  'Search: water scarcity evidence',
+  'Find: local campaigns and public data',
+]);
+warmupModel();
+</script>
+</body>
+</html>

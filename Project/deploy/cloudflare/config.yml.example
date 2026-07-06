@@ -1,0 +1,16 @@
+# Cloudflare named tunnel config for CommonSource.
+# Replace tunnel, credentials-file, and hostname after running:
+#   cloudflared tunnel login
+#   cloudflared tunnel create commonsource-demo
+#   cloudflared tunnel route dns commonsource-demo commonsource.example.com
+
+tunnel: YOUR_TUNNEL_ID_OR_NAME
+credentials-file: C:\Users\YOUR_USER\.cloudflared\YOUR_TUNNEL_ID.json
+
+ingress:
+  - hostname: commonsource.example.com
+    service: http://localhost:5050
+    originRequest:
+      connectTimeout: 30s
+      httpHostHeader: commonsource.example.com
+  - service: http_status:404

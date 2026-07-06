@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Register - CommonSource</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --red: #C0271F;
+  --dark: #1A1A1A;
+  --mid: #4A4A4A;
+  --light: #8A8A8A;
+  --rule: #E0DDD8;
+  --bg: #F7F6F2;
+  --white: #FFFFFF;
+  --serif: Georgia, 'Times New Roman', serif;
+  --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+body { min-height: 100vh; font-family: var(--sans); background: var(--bg); color: var(--dark); }
+header { border-bottom: 1px solid var(--rule); background: var(--white); }
+.header-inner { max-width: 880px; margin: 0 auto; padding: 18px 24px; display: flex; justify-content: space-between; align-items: center; }
+.logo { font-family: var(--serif); font-size: 1.35rem; font-weight: 700; color: var(--dark); text-decoration: none; }
+.logo span { color: var(--red); }
+.nav-link { font-size: 0.8rem; color: var(--mid); text-decoration: none; }
+main { max-width: 880px; margin: 0 auto; padding: 48px 24px; display: grid; grid-template-columns: 1fr 360px; gap: 36px; align-items: start; }
+.intro h1 { font-family: var(--serif); font-size: 2rem; line-height: 1.2; margin-bottom: 14px; }
+.intro p { color: var(--mid); font-size: 0.94rem; line-height: 1.7; max-width: 420px; }
+.card { background: var(--white); border: 1px solid var(--rule); border-radius: 4px; padding: 22px; }
+.card h2 { font-size: 0.86rem; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 18px; }
+.field { display: flex; flex-direction: column; gap: 7px; margin-bottom: 14px; }
+label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--light); }
+input { width: 100%; font-family: var(--sans); font-size: 0.9rem; padding: 11px 12px; border: 1px solid var(--rule); border-radius: 4px; background: var(--bg); outline: none; }
+input:focus { border-color: var(--red); background: var(--white); }
+button { width: 100%; font-family: var(--sans); font-size: 0.84rem; font-weight: 700; padding: 11px 14px; border: 0; border-radius: 4px; background: var(--red); color: var(--white); cursor: pointer; }
+button.secondary { margin-bottom: 2px; background: var(--white); color: var(--mid); border: 1px solid var(--rule); }
+button:disabled { background: #CCC; cursor: wait; }
+.status { min-height: 22px; margin-top: 12px; color: var(--light); font-size: 0.8rem; line-height: 1.5; }
+.status.error { color: var(--red); }
+.helper { margin-top: 12px; font-size: 0.8rem; color: var(--light); }
+.helper a { color: var(--red); text-decoration: none; font-weight: 700; }
+@media (max-width: 760px) { main { grid-template-columns: 1fr; padding-top: 32px; } }
+</style>
+<link rel="stylesheet" href="/theme.css">
+</head>
+<body>
+<header>
+  <div class="header-inner">
+    <a class="logo" href="/">Common<span>Source</span></a>
+    <a class="nav-link" href="/login">Login</a>
+  </div>
+</header>
+<main>
+  <section class="intro">
+    <h1>Create your CommonSource account</h1>
+    <p>New accounts begin with reader access. The first account on a fresh installation becomes the super admin bootstrap account.</p>
+  </section>
+  <section class="card">
+    <h2>Register</h2>
+    <form id="register-form">
+      <div class="field">
+        <label for="name">Name</label>
+        <input id="name" name="name" autocomplete="name" required>
+      </div>
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" autocomplete="email" required>
+      </div>
+      <button class="secondary" id="send-otp-btn" type="button">Send OTP</button>
+      <div class="field" style="margin-top:14px">
+        <label for="otp">Email OTP</label>
+        <input id="otp" name="otp" inputmode="numeric" maxlength="6" autocomplete="one-time-code" required>
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="new-password" minlength="10" required>
+      </div>
+      <button id="register-btn" type="submit">Create account</button>
+      <div class="status" id="status" role="status"></div>
+    </form>
+    <div class="helper">Already registered? <a href="/login">Sign in</a>.</div>
+  </section>
+</main>
+<script>
+const API = window.location.protocol === 'file:' ? 'http://localhost:5050' : '';
+const ACCESS_TOKEN_KEY = 'cs_access_token';
+const REFRESH_TOKEN_KEY = 'cs_refresh_token';
+const USER_KEY = 'cs_user';
+
+function setStatus(message, isError = false) {
+  const el = document.getElementById('status');
+  el.textContent = message || '';
+  el.classList.toggle('error', !!isError);
+}
+
+async function postJson(path, payload) {
+  const res = await fetch(`${API}${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
+  return data;
+}
+
+function deliveryStatus(data) {
+  const delivery = data.delivery || {};
+  if (delivery.provider === 'smtp' && delivery.sent) return ' Email sent via SMTP.';
+  if (delivery.provider === 'resend' && delivery.sent) return ' Email sent via Resend.';
+  if (delivery.provider === 'outbox') {
+    return ` Email provider is not configured; OTP was written to local outbox: ${delivery.outbox_path || 'Project/data/email_outbox'}`;
+  }
+  return '';
+}
+
+document.getElementById('send-otp-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('send-otp-btn');
+  btn.disabled = true;
+  setStatus('Sending OTP...');
+  try {
+    const data = await postJson('/api/auth/otp/send', {
+      email: document.getElementById('email').value.trim(),
+      purpose: 'REGISTER'
+    });
+    setStatus(`${data.message || 'OTP request completed.'}${deliveryStatus(data)}`);
+  } catch (err) {
+    setStatus(err.message || 'Could not send OTP.', true);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+document.getElementById('register-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  const btn = document.getElementById('register-btn');
+  btn.disabled = true;
+  setStatus('Creating account...');
+  try {
+    const data = await postJson('/api/auth/register', {
+      name: document.getElementById('name').value.trim(),
+      email: document.getElementById('email').value.trim(),
+      password: document.getElementById('password').value,
+      otp: document.getElementById('otp').value.trim()
+    });
+    if (data.access_token) localStorage.setItem(ACCESS_TOKEN_KEY, data.access_token);
+    if (data.refresh_token) localStorage.setItem(REFRESH_TOKEN_KEY, data.refresh_token);
+    if (data.user) localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+    const roleNote = data.user?.role === 'super_admin' ? ' Super admin access has been bootstrapped.' : '';
+    setStatus(`${data.message || 'Account created.'}${roleNote}`);
+    setTimeout(() => { window.location.href = data.access_token ? '/index.html#articles' : '/login'; }, 700);
+  } catch (err) {
+    setStatus(err.message || 'Registration failed.', true);
+  } finally {
+    btn.disabled = false;
+  }
+});
+</script>
+</body>
+</html>

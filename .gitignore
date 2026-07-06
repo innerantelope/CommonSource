@@ -1,0 +1,27 @@
+# Local secrets
+.env
+.env.*
+!*.env.example
+Project/.env
+Project/.env.*
+!Project/.env.example
+!Project/.env.demo.example
+!Project/deploy/oracle/*.env.example
+Project/app/.env
+
+# Python/runtime artifacts
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.codex_pydeps/
+
+# Local data, uploads, caches, and logs
+Project/data/
+*.log
+server-*.out.log
+server-*.err.log
+
+# OS/editor noise
+desktop.ini
+.DS_Store

@@ -1,0 +1,21 @@
+# CommonSource vector infrastructure
+# Usage: docker compose up -d qdrant
+
+services:
+  qdrant:
+    image: qdrant/qdrant:v1.12.5
+    container_name: commonsource-qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_storage:/qdrant/storage
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:6333/readyz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  qdrant_storage:

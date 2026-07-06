@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profile - CommonSource</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --red: #C0271F;
+  --dark: #1A1A1A;
+  --mid: #4A4A4A;
+  --light: #8A8A8A;
+  --rule: #E0DDD8;
+  --bg: #F7F6F2;
+  --white: #FFFFFF;
+  --serif: Georgia, 'Times New Roman', serif;
+  --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+body { font-family: var(--sans); background: var(--bg); color: var(--dark); min-height: 100vh; }
+header { background: var(--dark); border-bottom: 3px solid var(--red); padding: 0 24px; }
+.header-inner { max-width: 920px; margin: 0 auto; padding: 22px 0; display: flex; justify-content: space-between; align-items: center; gap: 18px; }
+.logo { font-family: var(--serif); font-size: 1.5rem; font-weight: 700; color: var(--white); text-decoration: none; }
+.logo span { color: var(--red); }
+.nav { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.nav a, .nav button { color: #CCC; background: transparent; border: 1px solid #444; border-radius: 4px; padding: 7px 10px; font-size: 0.76rem; text-decoration: none; cursor: pointer; }
+.nav a:hover, .nav button:hover { border-color: #777; color: var(--white); }
+main { max-width: 920px; margin: 0 auto; padding: 32px 24px 72px; }
+.intro { max-width: 640px; margin-bottom: 24px; }
+.intro h1 { font-family: var(--serif); font-size: 1.65rem; margin-bottom: 10px; }
+.intro p { color: var(--mid); font-size: 0.9rem; line-height: 1.65; }
+.status { min-height: 22px; color: var(--light); font-size: 0.8rem; margin-bottom: 14px; }
+.status.error { color: var(--red); }
+.layout { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
+.panel { background: var(--white); border: 1px solid var(--rule); border-radius: 4px; padding: 18px; }
+.panel.full { grid-column: 1 / -1; }
+.panel h2 { font-size: 0.86rem; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 14px; }
+.profile-row, .activity-row { border-bottom: 1px solid var(--rule); padding: 9px 0; }
+.profile-row:last-child, .activity-row:last-child { border-bottom: 0; }
+.label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--light); margin-bottom: 4px; }
+.value { color: var(--dark); font-size: 0.9rem; }
+.field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--light); }
+.input { width: 100%; font-family: var(--sans); font-size: 0.9rem; padding: 10px 11px; border: 1px solid var(--rule); border-radius: 4px; background: var(--bg); color: var(--dark); outline: none; }
+textarea.input { min-height: 96px; resize: vertical; }
+.input:focus { border-color: var(--red); background: var(--white); }
+.btn { font-family: var(--sans); font-size: 0.8rem; font-weight: 700; padding: 9px 14px; background: var(--red); color: var(--white); border: none; border-radius: 4px; cursor: pointer; }
+.btn:disabled { background: #CCC; cursor: wait; }
+.activity-action { font-weight: 700; color: var(--dark); font-size: 0.84rem; margin-bottom: 3px; }
+.activity-meta { color: var(--light); font-size: 0.74rem; line-height: 1.5; }
+.empty { color: var(--light); font-size: 0.82rem; padding: 12px 0; }
+@media (max-width: 760px) { .layout { grid-template-columns: 1fr; } .panel.full { grid-column: auto; } }
+</style>
+<link rel="stylesheet" href="/theme.css">
+</head>
+<body>
+<header>
+  <div class="header-inner">
+    <a class="logo" href="/search">Common<span>Source</span></a>
+    <div class="nav" data-role-nav></div>
+  </div>
+</header>
+<main>
+  <section class="intro">
+    <h1>User Profile</h1>
+    <p>Review your account details, change your password, and inspect recent activity recorded in the audit log.</p>
+  </section>
+  <div class="status" id="status" role="status"></div>
+
+  <div class="layout">
+    <section class="panel">
+      <h2>Account</h2>
+      <div id="profile-fields">
+        <div class="empty">Loading profile...</div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Change Password</h2>
+      <form id="password-form">
+        <div class="field">
+          <label for="current-password">Current password</label>
+          <input class="input" id="current-password" type="password" autocomplete="current-password" required>
+        </div>
+        <div class="field">
+          <label for="new-password">New password</label>
+          <input class="input" id="new-password" type="password" autocomplete="new-password" required>
+        </div>
+        <button class="btn" id="password-btn" type="submit">Change password</button>
+      </form>
+    </section>
+
+    <section class="panel full" id="publisher-application-panel">
+      <h2>Publisher Access</h2>
+      <div id="publisher-application-content">
+        <div class="empty">Loading publisher application status...</div>
+      </div>
+    </section>
+
+    <section class="panel full">
+      <h2>Activity History</h2>
+      <div id="activity-list">
+        <div class="empty">Loading activity...</div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script src="/common-nav.js"></script>
+<script>
+const API = window.location.protocol === 'file:' ? 'http://localhost:5050' : '';
+const ACCESS_TOKEN_KEY = 'cs_access_token';
+const REFRESH_TOKEN_KEY = 'cs_refresh_token';
+const USER_KEY = 'cs_user';
+let csrfToken = '';
+
+function escHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+function getToken() {
+  return localStorage.getItem(ACCESS_TOKEN_KEY) || '';
+}
+
+function clearAuthState() {
+  localStorage.removeItem(ACCESS_TOKEN_KEY);
+  localStorage.removeItem(REFRESH_TOKEN_KEY);
+  localStorage.removeItem(USER_KEY);
+  csrfToken = '';
+}
+
+function setStatus(message, isError = false) {
+  const el = document.getElementById('status');
+  el.textContent = message || '';
+  el.classList.toggle('error', !!isError);
+}
+
+async function getCsrfToken() {
+  if (csrfToken) return csrfToken;
+  const res = await fetch(`${API}/api/auth/csrf`, {
+    headers: { Authorization: `Bearer ${getToken()}` }
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
+  csrfToken = data.csrf_token || '';
+  return csrfToken;
+}
+
+async function fetchJson(path, options = {}) {
+  const token = getToken();
+  if (!token) {
+    window.location.href = '/login';
+    throw new Error('Login required');
+  }
+  const method = (options.method || 'GET').toUpperCase();
+  const headers = {
+    ...(options.headers || {}),
+    Authorization: `Bearer ${token}`,
+  };
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+    headers['X-CSRF-Token'] = headers['X-CSRF-Token'] || await getCsrfToken();
+  }
+  const res = await fetch(`${API}${path}`, { ...options, headers });
+  const data = await res.json().catch(() => ({}));
+  if (res.status === 401) {
+    clearAuthState();
+    window.location.href = '/login';
+  }
+  if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
+  return data;
+}
+
+function renderProfile(user) {
+  localStorage.setItem(USER_KEY, JSON.stringify(user));
+  const fields = [
+    ['Name', user.name],
+    ['Email', user.email],
+    ['Role', user.role],
+    ['Account Status', user.is_active ? 'Active' : 'Inactive'],
+    ['Created Date', (user.created_at || '').slice(0, 19)],
+  ];
+  document.getElementById('profile-fields').innerHTML = fields.map(([label, value]) => `
+    <div class="profile-row">
+      <div class="label">${escHtml(label)}</div>
+      <div class="value">${escHtml(value)}</div>
+    </div>
+  `).join('');
+}
+
+function renderPublisherApplication(user, application) {
+  const panel = document.getElementById('publisher-application-panel');
+  const content = document.getElementById('publisher-application-content');
+  if (!panel || !content) return;
+  if (['admin', 'super_admin'].includes(user.role)) {
+    panel.style.display = 'none';
+    return;
+  }
+  panel.style.display = '';
+  if (user.role === 'publisher') {
+    content.innerHTML = '<div class="value">Your account already has publisher access.</div>';
+    return;
+  }
+  if (application) {
+    content.innerHTML = `
+      <div class="profile-row">
+        <div class="label">Status</div>
+        <div class="value">${escHtml(application.status)}</div>
+      </div>
+      <div class="profile-row">
+        <div class="label">Organization</div>
+        <div class="value">${escHtml(application.organization_name || '')}</div>
+      </div>
+      <div class="profile-row">
+        <div class="label">Submitted</div>
+        <div class="value">${escHtml((application.created_at || '').slice(0, 19))}</div>
+      </div>
+    `;
+    return;
+  }
+  content.innerHTML = `
+    <p class="empty" style="padding-top:0">Apply for Publisher Access if you represent a publication, archive, community media station, or content partner.</p>
+    <form id="publisher-application-form">
+      <div class="field">
+        <label for="publisher-org">Organization name</label>
+        <input class="input" id="publisher-org" required>
+      </div>
+      <div class="field">
+        <label for="publisher-website">Website</label>
+        <input class="input" id="publisher-website" type="url" placeholder="https://">
+      </div>
+      <div class="field">
+        <label for="publisher-reason">Reason</label>
+        <textarea class="input" id="publisher-reason" required placeholder="Tell admins what you publish and why you need publisher access."></textarea>
+      </div>
+      <button class="btn" id="publisher-application-btn" type="submit">Apply for Publisher Access</button>
+    </form>
+  `;
+  document.getElementById('publisher-application-form').addEventListener('submit', submitPublisherApplication);
+}
+
+async function submitPublisherApplication(event) {
+  event.preventDefault();
+  const btn = document.getElementById('publisher-application-btn');
+  btn.disabled = true;
+  setStatus('Submitting publisher application...');
+  try {
+    await fetchJson('/api/publisher/apply', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        organization_name: document.getElementById('publisher-org').value.trim(),
+        website: document.getElementById('publisher-website').value.trim(),
+        reason: document.getElementById('publisher-reason').value.trim(),
+      }),
+    });
+    await loadProfile();
+    setStatus('Publisher application submitted for admin review.');
+  } catch (err) {
+    setStatus(err.message || 'Could not submit publisher application.', true);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function renderActivity(rows) {
+  const list = document.getElementById('activity-list');
+  if (!rows.length) {
+    list.innerHTML = '<div class="empty">No activity recorded yet.</div>';
+    return;
+  }
+  list.innerHTML = rows.map(row => `
+    <div class="activity-row">
+      <div class="activity-action">${escHtml(row.action)}</div>
+      <div class="activity-meta">${escHtml(row.resource_type)} ${escHtml(row.resource_id || '')} - ${escHtml((row.timestamp || '').slice(0, 19))}</div>
+    </div>
+  `).join('');
+}
+
+async function logoutUser() {
+  const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY) || '';
+  try {
+    await fetch(`${API}/api/auth/logout`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {})
+      },
+      body: JSON.stringify({ refresh_token: refreshToken })
+    });
+  } finally {
+    clearAuthState();
+    window.location.href = '/login';
+  }
+}
+
+async function loadProfile() {
+  const profile = await fetchJson('/api/auth/profile');
+  renderProfile(profile.user);
+  if (['reader', 'reviewer', 'publisher'].includes(profile.user.role)) {
+    const application = await fetchJson('/api/publisher/application');
+    renderPublisherApplication(profile.user, application.application);
+  } else {
+    renderPublisherApplication(profile.user, null);
+  }
+  const activity = await fetchJson('/api/auth/activity?per_page=25');
+  renderActivity(activity.activity || []);
+}
+
+document.getElementById('password-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  const btn = document.getElementById('password-btn');
+  btn.disabled = true;
+  setStatus('Changing password...');
+  try {
+    await fetchJson('/api/auth/change-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        current_password: document.getElementById('current-password').value,
+        new_password: document.getElementById('new-password').value,
+      })
+    });
+    clearAuthState();
+    setStatus('Password changed. Please log in again.');
+    setTimeout(() => { window.location.href = '/login'; }, 700);
+  } catch (err) {
+    setStatus(err.message || 'Could not change password.', true);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    window.CommonSourceNav?.initRoleNav();
+    await loadProfile();
+    setStatus('');
+  } catch (err) {
+    setStatus(err.message || 'Could not load profile.', true);
+  }
+});
+</script>
+</body>
+</html>

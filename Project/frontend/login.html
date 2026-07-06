@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login - CommonSource</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --red: #C0271F;
+  --dark: #1A1A1A;
+  --mid: #4A4A4A;
+  --light: #8A8A8A;
+  --rule: #E0DDD8;
+  --bg: #F7F6F2;
+  --white: #FFFFFF;
+  --serif: Georgia, 'Times New Roman', serif;
+  --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+body { min-height: 100vh; font-family: var(--sans); background: var(--bg); color: var(--dark); }
+header { border-bottom: 1px solid var(--rule); background: var(--white); }
+.header-inner { max-width: 880px; margin: 0 auto; padding: 18px 24px; display: flex; justify-content: space-between; align-items: center; }
+.logo { font-family: var(--serif); font-size: 1.35rem; font-weight: 700; color: var(--dark); text-decoration: none; }
+.logo span { color: var(--red); }
+.nav-link { font-size: 0.8rem; color: var(--mid); text-decoration: none; }
+main { max-width: 880px; margin: 0 auto; padding: 48px 24px; display: grid; grid-template-columns: 1fr 360px; gap: 36px; align-items: start; }
+.intro h1 { font-family: var(--serif); font-size: 2rem; line-height: 1.2; margin-bottom: 14px; }
+.intro p { color: var(--mid); font-size: 0.94rem; line-height: 1.7; max-width: 420px; }
+.card { background: var(--white); border: 1px solid var(--rule); border-radius: 4px; padding: 22px; }
+.card h2 { font-size: 0.86rem; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 18px; }
+.field { display: flex; flex-direction: column; gap: 7px; margin-bottom: 14px; }
+label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--light); }
+input { width: 100%; font-family: var(--sans); font-size: 0.9rem; padding: 11px 12px; border: 1px solid var(--rule); border-radius: 4px; background: var(--bg); outline: none; }
+input:focus { border-color: var(--red); background: var(--white); }
+button { width: 100%; font-family: var(--sans); font-size: 0.84rem; font-weight: 700; padding: 11px 14px; border: 0; border-radius: 4px; background: var(--red); color: var(--white); cursor: pointer; }
+button.secondary { margin-top: 8px; background: var(--white); color: var(--mid); border: 1px solid var(--rule); }
+button:disabled { background: #CCC; cursor: wait; }
+.status { min-height: 22px; margin-top: 12px; color: var(--light); font-size: 0.8rem; line-height: 1.5; }
+.status.error { color: var(--red); }
+.split { height: 1px; background: var(--rule); margin: 20px 0; }
+.helper { margin-top: 12px; font-size: 0.8rem; color: var(--light); }
+.helper a { color: var(--red); text-decoration: none; font-weight: 700; }
+@media (max-width: 760px) { main { grid-template-columns: 1fr; padding-top: 32px; } }
+</style>
+<link rel="stylesheet" href="/theme.css">
+</head>
+<body>
+<header>
+  <div class="header-inner">
+    <a class="logo" href="/">Common<span>Source</span></a>
+    <a class="nav-link" href="/index.html#articles">Search archive</a>
+  </div>
+</header>
+<main>
+  <section class="intro">
+    <h1>Sign in to CommonSource</h1>
+    <p>Use your platform account to manage publishers, feeds, uploads, reviews, and administrative workflows.</p>
+  </section>
+  <section class="card">
+    <h2>Login</h2>
+    <form id="login-form">
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" autocomplete="email" required>
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required>
+      </div>
+      <div class="field" id="login-otp-field" style="display:none">
+        <label for="login-otp">Admin OTP</label>
+        <input id="login-otp" name="login-otp" inputmode="numeric" maxlength="6" autocomplete="one-time-code">
+      </div>
+      <button id="login-btn" type="submit">Login</button>
+      <div class="status" id="status" role="status"></div>
+    </form>
+
+    <div class="split"></div>
+
+    <form id="reset-form">
+      <div class="field">
+        <label for="reset-email">Password reset email</label>
+        <input id="reset-email" name="reset-email" type="email" autocomplete="email">
+      </div>
+      <button class="secondary" id="reset-btn" type="submit">Send reset OTP</button>
+      <div class="field" id="reset-otp-fields" style="display:none; margin-top:14px">
+        <label for="reset-otp">Reset OTP</label>
+        <input id="reset-otp" name="reset-otp" inputmode="numeric" maxlength="6" autocomplete="one-time-code">
+      </div>
+      <div class="field" id="reset-password-field" style="display:none">
+        <label for="reset-password">New password</label>
+        <input id="reset-password" name="reset-password" type="password" autocomplete="new-password">
+      </div>
+      <button class="secondary" id="reset-confirm-btn" type="button" style="display:none">Reset password</button>
+      <div class="status" id="reset-status" role="status"></div>
+    </form>
+
+    <div class="helper">No account yet? <a href="/register">Create one</a>.</div>
+  </section>
+</main>
+<script>
+const API = window.location.protocol === 'file:' ? 'http://localhost:5050' : '';
+const ACCESS_TOKEN_KEY = 'cs_access_token';
+const REFRESH_TOKEN_KEY = 'cs_refresh_token';
+const USER_KEY = 'cs_user';
+const ADMIN_OTP_TRUST_KEY = 'cs_admin_otp_trust_token';
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (localStorage.getItem(ACCESS_TOKEN_KEY) && localStorage.getItem(USER_KEY)) {
+    window.location.href = '/index.html';
+  }
+});
+
+function setStatus(id, message, isError = false) {
+  const el = document.getElementById(id);
+  el.textContent = message || '';
+  el.classList.toggle('error', !!isError);
+}
+
+async function postJson(path, payload) {
+  const res = await fetch(`${API}${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
+  return data;
+}
+
+function deliveryStatus(data) {
+  const delivery = data.delivery || {};
+  if (delivery.provider === 'smtp' && delivery.sent) return ' Email sent via SMTP.';
+  if (delivery.provider === 'resend' && delivery.sent) return ' Email sent via Resend.';
+  if (delivery.provider === 'outbox') {
+    return ` Email provider is not configured; OTP was written to local outbox: ${delivery.outbox_path || 'Project/data/email_outbox'}`;
+  }
+  return '';
+}
+
+document.getElementById('login-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  const btn = document.getElementById('login-btn');
+  btn.disabled = true;
+  setStatus('status', 'Signing in...');
+  try {
+    const data = await postJson('/api/auth/login', {
+      email: document.getElementById('email').value.trim(),
+      password: document.getElementById('password').value,
+      otp: document.getElementById('login-otp').value.trim(),
+      admin_otp_trust_token: localStorage.getItem(ADMIN_OTP_TRUST_KEY) || ''
+    });
+    if (data.otp_required) {
+      document.getElementById('login-otp-field').style.display = '';
+      document.getElementById('login-otp').required = true;
+      setStatus('status', `${data.message || 'Enter the OTP sent to your email.'}${deliveryStatus(data)}`);
+      return;
+    }
+    if (data.access_token) localStorage.setItem(ACCESS_TOKEN_KEY, data.access_token);
+    if (data.refresh_token) localStorage.setItem(REFRESH_TOKEN_KEY, data.refresh_token);
+    if (data.user) localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+    if (data.admin_otp_trust_token) localStorage.setItem(ADMIN_OTP_TRUST_KEY, data.admin_otp_trust_token);
+    setStatus('status', 'Login successful. Opening the dashboard...');
+    setTimeout(() => { window.location.href = '/index.html'; }, 350);
+  } catch (err) {
+    setStatus('status', err.message || 'Login failed.', true);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+document.getElementById('reset-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  const btn = document.getElementById('reset-btn');
+  btn.disabled = true;
+  setStatus('reset-status', 'Preparing reset...');
+  try {
+    const data = await postJson('/api/auth/password-reset/request', {
+      email: document.getElementById('reset-email').value.trim()
+    });
+    document.getElementById('reset-otp-fields').style.display = '';
+    document.getElementById('reset-password-field').style.display = '';
+    document.getElementById('reset-confirm-btn').style.display = '';
+    setStatus('reset-status', `${data.message || 'If the account exists, a reset OTP has been sent.'}${deliveryStatus(data)}`);
+  } catch (err) {
+    setStatus('reset-status', err.message || 'Reset request failed.', true);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+document.getElementById('reset-confirm-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('reset-confirm-btn');
+  btn.disabled = true;
+  setStatus('reset-status', 'Resetting password...');
+  try {
+    const data = await postJson('/api/auth/password-reset/confirm', {
+      email: document.getElementById('reset-email').value.trim(),
+      otp: document.getElementById('reset-otp').value.trim(),
+      new_password: document.getElementById('reset-password').value
+    });
+    setStatus('reset-status', data.message || 'Password reset successful. You can now log in.');
+  } catch (err) {
+    setStatus('reset-status', err.message || 'Password reset failed.', true);
+  } finally {
+    btn.disabled = false;
+  }
+});
+</script>
+</body>
+</html>

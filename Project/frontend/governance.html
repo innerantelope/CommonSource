@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Governance â€” CommonSource</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --red:   #C0271F;
+  --dark:  #1A1A1A;
+  --mid:   #4A4A4A;
+  --light: #8A8A8A;
+  --rule:  #E0DDD8;
+  --bg:    #F7F6F2;
+  --white: #FFFFFF;
+  --serif: 'Georgia', 'Times New Roman', serif;
+  --sans:  -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+html { font-size: 16px; scroll-behavior: smooth; }
+body { font-family: var(--sans); background: var(--white); color: var(--dark); }
+
+/* â”€â”€ NAV â”€â”€ */
+nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(26,26,26,0.97); backdrop-filter: blur(8px);
+  border-bottom: 1px solid #2A2A2A; padding: 0 32px;
+}
+.nav-inner {
+  max-width: 1040px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between; height: 52px;
+}
+.nav-logo { font-family: var(--serif); font-size: 1.1rem; font-weight: 700; color: var(--white); text-decoration: none; }
+.nav-logo span { color: var(--red); }
+.nav-sub { font-size: 0.62rem; color: #666; letter-spacing: 0.08em; text-transform: uppercase; margin-top: 1px; }
+.nav-links { display: flex; align-items: center; gap: 24px; }
+.nav-links a { font-size: 0.76rem; color: #999; text-decoration: none; transition: color 0.12s; }
+.nav-links a:hover { color: var(--white); }
+.nav-links a.active { color: #ccc; }
+.nav-cta { background: var(--red); color: var(--white) !important; padding: 7px 16px; border-radius: 3px; font-weight: 600; }
+.nav-cta:hover { background: #A01E17 !important; }
+
+/* â”€â”€ SHARED LAYOUT â”€â”€ */
+.inner { max-width: 1040px; margin: 0 auto; }
+.section-kicker { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--red); margin-bottom: 14px; }
+.section-h { font-family: var(--serif); font-size: clamp(1.5rem, 2.8vw, 2.2rem); font-weight: 700; color: var(--dark); line-height: 1.25; margin-bottom: 16px; }
+.section-p { font-size: 0.95rem; color: var(--mid); line-height: 1.75; max-width: 640px; }
+.btn { font-family: var(--sans); font-size: 0.88rem; font-weight: 700; padding: 12px 26px; border-radius: 3px; text-decoration: none; transition: all 0.12s; letter-spacing: 0.02em; display: inline-block; }
+.btn-primary { background: var(--red); color: var(--white); }
+.btn-primary:hover { background: #A01E17; }
+.btn-ghost { background: transparent; color: var(--dark); border: 1px solid var(--rule); }
+.btn-ghost:hover { border-color: #888; }
+.btn-white { background: var(--white); color: var(--red); }
+.btn-white:hover { background: #F0EEE8; }
+.btn-outline-white { background: transparent; color: var(--white); border: 1px solid rgba(255,255,255,0.4); }
+.btn-outline-white:hover { border-color: var(--white); background: rgba(255,255,255,0.08); }
+
+/* â”€â”€ HERO â”€â”€ */
+.hero { background: var(--dark); padding: 80px 32px 72px; position: relative; overflow: hidden; }
+.hero::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 70% 50%, rgba(192,39,31,0.08) 0%, transparent 55%);
+  pointer-events: none;
+}
+.hero-inner { max-width: 1040px; margin: 0 auto; }
+.hero-kicker { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--red); margin-bottom: 20px; }
+.hero-headline {
+  font-family: var(--serif);
+  font-size: clamp(2.8rem, 6vw, 5rem);
+  font-weight: 700; color: var(--white); line-height: 1.08;
+  margin-bottom: 24px; letter-spacing: -0.5px;
+}
+.hero-sub {
+  font-size: 1.05rem; color: #A0A0A0; line-height: 1.75;
+  max-width: 600px; border-left: 3px solid var(--red); padding-left: 20px;
+}
+.hero-note { font-size: 0.75rem; color: #555; margin-top: 28px; letter-spacing: 0.02em; }
+.hero-note a { color: #777; text-decoration: none; border-bottom: 1px solid #333; }
+
+/* â”€â”€ PRINCIPLES â”€â”€ */
+.principles-section { background: var(--white); padding: 80px 32px; }
+.principles-list { margin-top: 48px; display: flex; flex-direction: column; gap: 0; }
+.principle {
+  display: flex; gap: 32px; align-items: flex-start;
+  padding: 32px 0; border-bottom: 1px solid var(--rule);
+  transition: background 0.1s;
+}
+.principle:first-child { border-top: 1px solid var(--rule); }
+.principle-num {
+  font-family: var(--serif);
+  font-size: clamp(2.2rem, 4vw, 3.2rem);
+  color: var(--rule); font-weight: 700;
+  line-height: 1; min-width: 56px; flex-shrink: 0;
+  transition: color 0.15s;
+}
+.principle:hover .principle-num { color: var(--red); }
+.principle-body { flex: 1; padding-top: 4px; }
+.principle-title {
+  font-family: var(--serif); font-size: 1.15rem;
+  font-weight: 700; color: var(--dark); margin-bottom: 10px; line-height: 1.3;
+}
+.principle-text { font-size: 0.92rem; color: var(--mid); line-height: 1.8; max-width: 680px; }
+
+/* â”€â”€ COUNCIL â”€â”€ */
+.council-section { background: var(--dark); padding: 80px 32px; }
+.council-section .section-h { color: var(--white); margin-bottom: 48px; }
+.council-section .section-kicker { color: var(--red); }
+.council-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; border: 1px solid #222; border-radius: 6px; overflow: hidden; margin-top: 0; }
+.council-cell { background: #111; padding: 28px 28px; border: none; }
+.council-cell-label { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--red); margin-bottom: 10px; }
+.council-cell-title { font-family: var(--serif); font-size: 1rem; font-weight: 700; color: var(--white); margin-bottom: 8px; }
+.council-cell-text { font-size: 0.82rem; color: #888; line-height: 1.75; }
+.council-cell-text li { margin-left: 16px; margin-bottom: 4px; }
+.council-cell-text ul { padding-left: 0; list-style: none; }
+.council-cell-text ul li::before { content: 'â€”'; margin-right: 8px; color: #444; }
+.council-status {
+  grid-column: 1 / -1; background: #0D0D0D;
+  border-top: 1px solid #222; padding: 20px 28px;
+  display: flex; align-items: center; gap: 12px;
+}
+.status-pill { background: var(--red); color: var(--white); font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 4px 10px; border-radius: 2px; white-space: nowrap; flex-shrink: 0; }
+.council-status-text { font-size: 0.82rem; color: #777; line-height: 1.5; }
+.council-status-text a { color: #999; }
+
+/* â”€â”€ ELIGIBILITY â”€â”€ */
+.eligibility-section { background: var(--bg); padding: 80px 32px; }
+.eligibility-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 40px; }
+.elig-col-label { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 16px; }
+.elig-col-label.yes { color: #1A6B3C; }
+.elig-col-label.no { color: var(--mid); }
+.elig-list { display: flex; flex-direction: column; gap: 8px; }
+.elig-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border-radius: 4px; font-size: 0.84rem; line-height: 1.55; }
+.elig-item.yes { background: var(--white); border: 1px solid var(--rule); border-left: 3px solid #1A6B3C; color: var(--mid); }
+.elig-item.no { background: var(--white); border: 1px solid var(--rule); border-left: 3px solid #CCC; color: var(--light); }
+.elig-marker { font-size: 0.7rem; font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+.elig-marker.yes { color: #1A6B3C; }
+.elig-marker.no { color: #C0C0C0; }
+
+/* â”€â”€ EDITORIAL STANDARDS â”€â”€ */
+.standards-section { background: var(--white); padding: 80px 32px; }
+.standards-list { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 40px; }
+.standard-card { padding: 24px; border: 1px solid var(--rule); border-radius: 4px; border-top: 3px solid var(--red); }
+.standard-name { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--red); margin-bottom: 10px; }
+.standard-text { font-size: 0.88rem; color: var(--mid); line-height: 1.75; }
+
+/* â”€â”€ REVENUE â”€â”€ */
+.revenue-section { background: var(--dark); padding: 80px 32px; }
+.revenue-section .section-h { color: var(--white); }
+.revenue-section .section-p { color: #A0A0A0; }
+.revenue-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 40px; margin-top: 48px; align-items: start; }
+.revenue-streams { display: flex; flex-direction: column; gap: 16px; }
+.rev-stream { background: #111; border: 1px solid #222; border-radius: 4px; padding: 22px 22px; }
+.rev-stream-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 10px; }
+.rev-stream-title { font-family: var(--serif); font-size: 0.95rem; font-weight: 700; color: var(--white); }
+.rev-stream-pct { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--red); }
+.rev-stream-text { font-size: 0.8rem; color: #888; line-height: 1.7; }
+.rev-stream-breakdown { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+.rev-bar { display: flex; align-items: center; gap: 10px; }
+.rev-bar-label { font-size: 0.7rem; color: #666; min-width: 160px; }
+.rev-bar-track { flex: 1; height: 4px; background: #1E1E1E; border-radius: 2px; }
+.rev-bar-fill { height: 4px; border-radius: 2px; }
+.rev-bar-fill.publishers { background: var(--red); width: 70%; }
+.rev-bar-fill.ops { background: #555; width: 20%; }
+.rev-bar-fill.reserve { background: #333; width: 10%; }
+.rev-bar-val { font-size: 0.68rem; color: #555; min-width: 28px; text-align: right; }
+.rev-aside { display: flex; flex-direction: column; gap: 12px; }
+.rev-aside-card { background: #0D0D0D; border: 1px solid #1A1A1A; border-radius: 4px; padding: 18px 18px; }
+.rev-aside-label { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #555; margin-bottom: 8px; }
+.rev-aside-text { font-size: 0.8rem; color: #666; line-height: 1.65; }
+.rev-aside-text strong { color: #999; display: block; margin-bottom: 3px; }
+
+/* â”€â”€ TRANSPARENCY â”€â”€ */
+.transparency-section { background: var(--bg); padding: 80px 32px; }
+.transparency-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 40px; }
+.transparency-item { background: var(--white); border: 1px solid var(--rule); border-radius: 4px; padding: 20px 18px; }
+.transparency-item-label { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--light); margin-bottom: 6px; }
+.transparency-item-title { font-size: 0.88rem; font-weight: 700; color: var(--dark); margin-bottom: 6px; line-height: 1.3; }
+.transparency-item-text { font-size: 0.76rem; color: var(--mid); line-height: 1.6; }
+
+/* â”€â”€ APPEALS â”€â”€ */
+.appeals-section { background: var(--white); padding: 80px 32px; }
+.appeals-steps { display: flex; flex-direction: column; gap: 0; margin-top: 40px; max-width: 720px; }
+.appeal-step { display: flex; gap: 24px; padding: 24px 0; border-bottom: 1px solid var(--rule); align-items: flex-start; }
+.appeal-step:last-child { border-bottom: none; }
+.appeal-step-num {
+  font-family: var(--serif); font-size: 2rem; font-weight: 700;
+  color: var(--rule); line-height: 1; min-width: 36px; flex-shrink: 0;
+  margin-top: 2px;
+}
+.appeal-step-body {}
+.appeal-step-title { font-size: 0.9rem; font-weight: 700; color: var(--dark); margin-bottom: 6px; }
+.appeal-step-text { font-size: 0.83rem; color: var(--mid); line-height: 1.7; }
+.appeal-step-tag { display: inline-block; margin-top: 8px; font-size: 0.62rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; background: var(--bg); color: var(--mid); border: 1px solid var(--rule); padding: 3px 8px; border-radius: 2px; }
+
+/* â”€â”€ JOIN CTA â”€â”€ */
+.join-section { background: var(--red); padding: 80px 32px; text-align: center; }
+.join-inner { max-width: 560px; margin: 0 auto; }
+.join-h { font-family: var(--serif); font-size: clamp(1.6rem, 3vw, 2.3rem); color: var(--white); font-weight: 700; margin-bottom: 18px; line-height: 1.25; }
+.join-p { font-size: 0.95rem; color: rgba(255,255,255,0.82); line-height: 1.75; margin-bottom: 36px; }
+.join-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+/* â”€â”€ FOOTER â”€â”€ */
+footer { background: #111; border-top: 1px solid #1E1E1E; padding: 28px 32px; text-align: center; }
+.footer-logo { font-family: var(--serif); font-size: 1rem; color: #555; margin-bottom: 8px; }
+.footer-logo span { color: var(--red); }
+.footer-meta { font-size: 0.7rem; color: #444; line-height: 1.8; }
+.footer-meta a { color: #666; text-decoration: none; }
+.footer-meta a:hover { color: #999; }
+
+/* â”€â”€ RESPONSIVE â”€â”€ */
+@media (max-width: 768px) {
+  .council-grid, .eligibility-grid, .standards-list, .revenue-grid, .transparency-list { grid-template-columns: 1fr; }
+  .nav-links { display: none; }
+  .hero, .principles-section, .council-section, .eligibility-section, .standards-section, .revenue-section, .transparency-section, .appeals-section, .join-section { padding: 56px 20px; }
+  .principle { gap: 18px; }
+  .principle-num { font-size: 2rem; min-width: 36px; }
+  .transparency-list { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 480px) {
+  .transparency-list { grid-template-columns: 1fr; }
+}
+</style>
+<link rel="stylesheet" href="/theme.css">
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <div>
+      <a class="nav-logo" href="/">Common<span>Source</span></a>
+      <div class="nav-sub">A Community Media Alliance Product</div>
+    </div>
+    <div class="nav-links">
+      <a href="/">Home</a>
+      <a href="/search">Search</a>
+      <a href="/governance" class="active">Governance</a>
+      <a href="/join" class="nav-cta">Join â†’</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-kicker">Community Media Alliance Â· CommonSource</div>
+    <h1 class="hero-headline">Governance.</h1>
+    <p class="hero-sub">
+      CommonSource is structured as a data cooperative.
+      This page is the public record of how it works.
+    </p>
+    <p class="hero-note">
+      Published by Community Media Alliance &middot; In effect from founding &middot;
+      <a href="mailto:abeer@smartngo.org">Questions: abeer@smartngo.org</a>
+    </p>
+  </div>
+</section>
+
+<!-- PRINCIPLES -->
+<section class="principles-section" id="principles">
+  <div class="inner">
+    <div class="section-kicker">Six Principles</div>
+    <h2 class="section-h">What this cooperative stands on.</h2>
+    <p class="section-p">These are not aspirations. They are the structural commitments that govern how CommonSource operates, and they cannot be changed without a supermajority of member publishers.</p>
+
+    <div class="principles-list">
+
+      <div class="principle">
+        <div class="principle-num">1</div>
+        <div class="principle-body">
+          <div class="principle-title">Publishers own the corpus.</div>
+          <p class="principle-text">No entity â€” including Community Media Alliance â€” can sell, licence, or redirect the CommonSource corpus without the collective consent of member publishers. CMA builds and maintains the platform. It does not own what members bring to it.</p>
+        </div>
+      </div>
+
+      <div class="principle">
+        <div class="principle-num">2</div>
+        <div class="principle-body">
+          <div class="principle-title">Revenue flows back.</div>
+          <p class="principle-text">All revenue above operating costs is distributed to contributing publishers. Distribution is proportional to how their content is cited â€” not by traffic, not by virality, not by language, not by the size of the publication. The smallest community radio station earns the same rate per citation as the largest member.</p>
+        </div>
+      </div>
+
+      <div class="principle">
+        <div class="principle-num">3</div>
+        <div class="principle-body">
+          <div class="principle-title">The council rotates.</div>
+          <p class="principle-text">The CommonSource Council is geographically distributed, term-limited, and elected. No single country or organisation may hold more than 20% of seats. CMA holds no permanent seat. Power is redistributed by design, not rhetoric.</p>
+        </div>
+      </div>
+
+      <div class="principle">
+        <div class="principle-num">4</div>
+        <div class="principle-body">
+          <div class="principle-title">Decisions are published.</div>
+          <p class="principle-text">All council decisions, content standard changes, and licensing negotiations are published within 30 days of being made. There are no private governance decisions. The record is open.</p>
+        </div>
+      </div>
+
+      <div class="principle">
+        <div class="principle-num">5</div>
+        <div class="principle-body">
+          <div class="principle-title">Appeals are open.</div>
+          <p class="principle-text">Any publisher may appeal a decision to remove or demote their content. The appeals process is documented, binding, and free. No publisher can be removed from the index without a recorded decision and an opportunity to respond.</p>
+        </div>
+      </div>
+
+      <div class="principle">
+        <div class="principle-num">6</div>
+        <div class="principle-body">
+          <div class="principle-title">The corpus is not for sale.</div>
+          <p class="principle-text">A data licensing deal â€” including to any AI company â€” requires approval by a supermajority of 75% of member publishers, with full public disclosure of terms before the vote is held. No exceptions. No fast-tracking. No emergency clauses.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- COUNCIL -->
+<section class="council-section" id="council">
+  <div class="inner">
+    <div class="section-kicker">The CommonSource Council</div>
+    <h2 class="section-h">Structure and responsibilities.</h2>
+
+    <div class="council-grid">
+
+      <div class="council-cell">
+        <div class="council-cell-label">Composition</div>
+        <div class="council-cell-title">9 to 15 seats</div>
+        <div class="council-cell-text">
+          Rotating 2-year terms with no consecutive terms permitted. No single country or organisation may hold more than 20% of seats at any time. A minimum of 3 continents must be represented at all times.
+        </div>
+      </div>
+
+      <div class="council-cell">
+        <div class="council-cell-label">Selection</div>
+        <div class="council-cell-title">Elected by member publishers</div>
+        <div class="council-cell-text">
+          Voting is weighted by contribution tier â€” not by size, revenue, or reach. A community radio station with 200 broadcasts contributes more to the index than a dormant member with 10 articles. Contribution is what gives voice.
+        </div>
+      </div>
+
+      <div class="council-cell">
+        <div class="council-cell-label">Responsibilities</div>
+        <div class="council-cell-title">What the council decides</div>
+        <div class="council-cell-text">
+          <ul>
+            <li>Editorial standards and content eligibility criteria</li>
+            <li>Licensing decisions and negotiating mandates</li>
+            <li>Revenue distribution formula (reviewed annually)</li>
+            <li>Appeals panel convening and oversight</li>
+            <li>Content removal decisions</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="council-cell">
+        <div class="council-cell-label">Quorum thresholds</div>
+        <div class="council-cell-title">When decisions are valid</div>
+        <div class="council-cell-text">
+          <ul>
+            <li>60% of seats â€” standard editorial decisions</li>
+            <li>75% of seats â€” any licensing negotiation or deal</li>
+            <li>75% of all members â€” corpus sale or dissolution</li>
+            <li>100% notification required before corpus sale vote</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="council-status">
+        <div class="status-pill">Now forming</div>
+        <div class="council-status-text">
+          The CommonSource Council is being formed from founding publisher partners. If your organisation is based in the Global South and meets eligibility criteria, <a href="/join">applications are open</a>.
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- CONTENT ELIGIBILITY -->
+<section class="eligibility-section" id="eligibility">
+  <div class="inner">
+    <div class="section-kicker">Content Eligibility</div>
+    <h2 class="section-h">What belongs in the index.</h2>
+    <p class="section-p">CommonSource is not a general-purpose news archive. It is a specialist corpus of community and local media from the Global South. These criteria are precise by design.</p>
+
+    <div class="eligibility-grid">
+      <div>
+        <div class="elig-col-label yes">Eligible</div>
+        <div class="elig-list">
+          <div class="elig-item yes"><span class="elig-marker yes">&#10003;</span>Community radio stations with original broadcasts or transcripts</div>
+          <div class="elig-item yes"><span class="elig-marker yes">&#10003;</span>Local digital and print newsrooms serving a defined geographic area</div>
+          <div class="elig-item yes"><span class="elig-marker yes">&#10003;</span>Civil society organisation field documentation and programme reports</div>
+          <div class="elig-item yes"><span class="elig-marker yes">&#10003;</span>Community-produced journalism with named editorial responsibility</div>
+          <div class="elig-item yes"><span class="elig-marker yes">&#10003;</span>Development programme reports with original fieldwork</div>
+          <div class="elig-item yes"><span class="elig-marker yes">&#10003;</span>Public interest broadcasting organisations serving underserved areas</div>
+        </div>
+      </div>
+      <div>
+        <div class="elig-col-label no">Not eligible</div>
+        <div class="elig-list">
+          <div class="elig-item no"><span class="elig-marker no">&times;</span>National news organisations, regardless of ownership</div>
+          <div class="elig-item no"><span class="elig-marker no">&times;</span>Corporate-owned media outlets</div>
+          <div class="elig-item no"><span class="elig-marker no">&times;</span>Content produced primarily for advertising revenue</div>
+          <div class="elig-item no"><span class="elig-marker no">&times;</span>Government propaganda or state-controlled media</div>
+          <div class="elig-item no"><span class="elig-marker no">&times;</span>Content without named editorial responsibility</div>
+          <div class="elig-item no"><span class="elig-marker no">&times;</span>Aggregated content without original reporting</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- EDITORIAL STANDARDS -->
+<section class="standards-section" id="standards">
+  <div class="inner">
+    <div class="section-kicker">Editorial Standards</div>
+    <h2 class="section-h">What CommonSource commits to â€” and what it does not.</h2>
+    <p class="section-p">These are the standards that govern what is indexed and how it is presented. CommonSource is a search engine, not a publisher â€” it does not produce journalism, but it holds the journalism it surfaces to clear requirements.</p>
+
+    <div class="standards-list">
+      <div class="standard-card">
+        <div class="standard-name">Attribution</div>
+        <p class="standard-text">Every piece of content in the index must have a named source, a publication name, and a date. Anonymous content, undated content, and unattributed aggregation are not eligible. Bylines are preserved in all search results.</p>
+      </div>
+      <div class="standard-card">
+        <div class="standard-name">Accuracy</div>
+        <p class="standard-text">CommonSource does not editorially verify the accuracy of indexed content â€” this responsibility rests with member publishers. However, the council reserves the right to remove content flagged as demonstrably false by a majority vote, with the decision published and open to appeal.</p>
+      </div>
+      <div class="standard-card">
+        <div class="standard-name">Language neutrality</div>
+        <p class="standard-text">No language is privileged in ranking or indexing. A Tamil-language community broadcast is indexed and surfaced on the same basis as an English-language report. Multilingual semantic embeddings ensure cross-language discovery without translation bias.</p>
+      </div>
+      <div class="standard-card">
+        <div class="standard-name">No ranking by engagement</div>
+        <p class="standard-text">Content is ranked by semantic relevance to the query, proximity to the subject, and source type â€” never by page views, social shares, or engagement signals. Virality has no weight in CommonSource search.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- REVENUE DISTRIBUTION -->
+<section class="revenue-section" id="revenue">
+  <div class="inner">
+    <div class="section-kicker">Revenue Distribution</div>
+    <h2 class="section-h">How money moves through the cooperative.</h2>
+    <p class="section-p">Every revenue stream has a defined distribution formula. No formula can be changed without a council vote, and members see their citation counts and earnings estimates in real time.</p>
+
+    <div class="revenue-grid">
+      <div class="revenue-streams">
+
+        <div class="rev-stream">
+          <div class="rev-stream-head">
+            <div class="rev-stream-title">Institutional access subscriptions</div>
+            <div class="rev-stream-pct">Quarterly distribution</div>
+          </div>
+          <p class="rev-stream-text">Universities, research institutions, INGOs, and policy organisations pay for API access. Revenue is distributed quarterly according to a fixed formula.</p>
+          <div class="rev-stream-breakdown">
+            <div class="rev-bar">
+              <div class="rev-bar-label">Publishers (by citation share)</div>
+              <div class="rev-bar-track"><div class="rev-bar-fill publishers"></div></div>
+              <div class="rev-bar-val">70%</div>
+            </div>
+            <div class="rev-bar">
+              <div class="rev-bar-label">Operating costs</div>
+              <div class="rev-bar-track"><div class="rev-bar-fill ops"></div></div>
+              <div class="rev-bar-val">20%</div>
+            </div>
+            <div class="rev-bar">
+              <div class="rev-bar-label">Council reserve (archive grants)</div>
+              <div class="rev-bar-track"><div class="rev-bar-fill reserve"></div></div>
+              <div class="rev-bar-val">10%</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="rev-stream">
+          <div class="rev-stream-head">
+            <div class="rev-stream-title">Data licensing revenue</div>
+            <div class="rev-stream-pct">Annual cooperative dividend</div>
+          </div>
+          <p class="rev-stream-text">Revenue from licensing the corpus to AI companies or research institutions is distributed as an annual dividend. The distribution formula is voted on by member publishers before any licensing deal is signed. No deal can be finalised without that vote.</p>
+        </div>
+
+      </div>
+
+      <div class="rev-aside">
+        <div class="rev-aside-card">
+          <div class="rev-aside-label">Citation tracking</div>
+          <div class="rev-aside-text">
+            <strong>Real-time publisher dashboards</strong>
+            Each member publisher has access to a dashboard showing citation counts by article, topic, and time period â€” updated in real time. Quarterly earnings estimates are visible before distribution.
+          </div>
+        </div>
+        <div class="rev-aside-card">
+          <div class="rev-aside-label">Free for publishers</div>
+          <div class="rev-aside-text">
+            <strong>The platform costs nothing to join</strong>
+            Search, upload, archive service, and dashboard access are free for all verified community media members. The platform exists to serve its members, not to extract from them.
+          </div>
+        </div>
+        <div class="rev-aside-card">
+          <div class="rev-aside-label">The 10% reserve</div>
+          <div class="rev-aside-text">
+            <strong>Funds archive service grants</strong>
+            The council reserve is held exclusively to fund digitisation and archive work for organisations that cannot afford it. No publisher should be locked out because of resources.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TRANSPARENCY -->
+<section class="transparency-section" id="transparency">
+  <div class="inner">
+    <div class="section-kicker">Transparency Commitments</div>
+    <h2 class="section-h">What is always published.</h2>
+    <p class="section-p">Governance without transparency is just administration. The following are standing commitments â€” not discretionary disclosures, but obligations the cooperative holds itself to by default.</p>
+
+    <div class="transparency-list">
+      <div class="transparency-item">
+        <div class="transparency-item-label">Annual</div>
+        <div class="transparency-item-title">Full accounts</div>
+        <p class="transparency-item-text">Income, costs, and distribution amounts published annually. Every revenue stream, every operating expense, every payout total.</p>
+      </div>
+      <div class="transparency-item">
+        <div class="transparency-item-label">Quarterly</div>
+        <div class="transparency-item-title">Citation and traffic data</div>
+        <p class="transparency-item-text">Aggregate citation and traffic data by publisher â€” how the corpus is being used and by whom. Individual publisher data is private; aggregate is public.</p>
+      </div>
+      <div class="transparency-item">
+        <div class="transparency-item-label">Within 30 days</div>
+        <div class="transparency-item-title">Council minutes</div>
+        <p class="transparency-item-text">Full minutes of every council meeting, including votes, dissenting positions, and any decisions deferred or reversed.</p>
+      </div>
+      <div class="transparency-item">
+        <div class="transparency-item-label">Before signing</div>
+        <div class="transparency-item-title">Licensing negotiations</div>
+        <p class="transparency-item-text">All material terms of any licensing negotiation are disclosed to member publishers before the vote and before any deal is finalised.</p>
+      </div>
+      <div class="transparency-item">
+        <div class="transparency-item-label">Within 7 days</div>
+        <div class="transparency-item-title">Content removal decisions</div>
+        <p class="transparency-item-text">Every decision to remove or demote content is published within 7 days, with the reason stated and the appeals pathway open.</p>
+      </div>
+      <div class="transparency-item">
+        <div class="transparency-item-label">Ongoing</div>
+        <div class="transparency-item-title">This governance document</div>
+        <p class="transparency-item-text">Any changes to this document require a council vote. All versions are archived. The change record is public.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- APPEALS -->
+<section class="appeals-section" id="appeals">
+  <div class="inner">
+    <div class="section-kicker">Appeals Process</div>
+    <h2 class="section-h">Every publisher has the right to be heard.</h2>
+    <p class="section-p">Any publisher may appeal a decision to remove or demote their content. The process is simple, documented, and binding on the council. There is no fee. There is no bureaucratic barrier.</p>
+
+    <div class="appeals-steps">
+
+      <div class="appeal-step">
+        <div class="appeal-step-num">1</div>
+        <div class="appeal-step-body">
+          <div class="appeal-step-title">Submit a written appeal</div>
+          <p class="appeal-step-text">The publisher submits a written appeal by email to the appeals address, stating the decision being appealed and the grounds. Appeals must be submitted within 30 days of the original decision.</p>
+          <span class="appeal-step-tag">Deadline: 30 days from decision</span>
+        </div>
+      </div>
+
+      <div class="appeal-step">
+        <div class="appeal-step-num">2</div>
+        <div class="appeal-step-body">
+          <div class="appeal-step-title">Council acknowledges receipt</div>
+          <p class="appeal-step-text">The council acknowledges the appeal in writing within 5 working days, confirming the review panel composition. If any panel member has a conflict of interest, they are replaced before acknowledgement.</p>
+          <span class="appeal-step-tag">Timeline: 5 working days</span>
+        </div>
+      </div>
+
+      <div class="appeal-step">
+        <div class="appeal-step-num">3</div>
+        <div class="appeal-step-body">
+          <div class="appeal-step-title">Review by a panel of three</div>
+          <p class="appeal-step-text">A panel of 3 council members â€” none of whom have a conflict of interest in the case â€” reviews the appeal. The publisher may submit additional documentation. The review is completed within 20 days of acknowledgement.</p>
+          <span class="appeal-step-tag">Timeline: 20 days from acknowledgement</span>
+        </div>
+      </div>
+
+      <div class="appeal-step">
+        <div class="appeal-step-num">4</div>
+        <div class="appeal-step-body">
+          <div class="appeal-step-title">Decision published with reasoning</div>
+          <p class="appeal-step-text">The panel decision is communicated to the publisher and published in the public record within 7 days of the decision, with full reasoning. Decisions to uphold removals are subject to the same transparency standards as the original decision.</p>
+          <span class="appeal-step-tag">Published within 7 days</span>
+        </div>
+      </div>
+
+      <div class="appeal-step">
+        <div class="appeal-step-num">5</div>
+        <div class="appeal-step-body">
+          <div class="appeal-step-title">Further appeal to the full council</div>
+          <p class="appeal-step-text">For decisions the publisher considers significant â€” removal of a substantial body of work, or decisions with editorial implications beyond their own content â€” a further appeal to the full council is available. The full council's decision is final.</p>
+          <span class="appeal-step-tag">For significant decisions only</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- JOIN CTA -->
+<section class="join-section">
+  <div class="join-inner">
+    <h2 class="join-h">This cooperative works if you're in it.</h2>
+    <p class="join-p">
+      The principles on this page are only as strong as the publishers who hold them.
+      If your organisation is community media, local journalism, or field documentation
+      from the Global South â€” this is your structure to own.
+    </p>
+    <div class="join-actions">
+      <a href="/join" class="btn btn-white">Become a founding member â†’</a>
+      <a href="mailto:abeer@smartngo.org" class="btn btn-outline-white">Talk to CMA</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <a class="footer-logo" href="/" aria-label="CommonSource home">Common<span>Source</span></a>
+  <div class="footer-meta">
+    A Community Media Alliance product &middot; Governance document &middot; In effect from founding<br>
+    Open source &middot; Cooperatively governed &middot; No advertising &middot; No tracking<br>
+    <a href="/">Home</a> &middot; <a href="/search">Search demo</a> &middot; <a href="/join">Join</a> &middot; <a href="mailto:abeer@smartngo.org">abeer@smartngo.org</a>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CommonSource | Community knowledge search</title>
+<style>
+:root {
+  --ink: #151515;
+  --muted: #686868;
+  --soft: #f5f3ee;
+  --line: #e7e1d8;
+  --paper: #ffffff;
+  --accent: #c0271f;
+  --green: #0f6e56;
+  --blue: #185fa5;
+  --gold: #854f0b;
+  --violet: #534ab7;
+  --shadow: 0 20px 70px rgba(31,26,20,0.12);
+  --sans: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { min-height: 100vh; font-family: var(--sans); color: var(--ink); background: var(--paper); line-height: 1.5; overflow-x: hidden; }
+a { color: inherit; text-decoration: none; }
+button, input { font: inherit; }
+
+.nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  border-bottom: 1px solid rgba(231,225,216,0.9);
+  background: rgba(255,250,244,0.92);
+  backdrop-filter: blur(16px);
+  transition: background 0.3s;
+}
+.nav-inner {
+  width: min(1120px, calc(100% - 40px));
+  height: 64px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+.logo { font-weight: 800; font-size: 1.05rem; letter-spacing: -0.01em; }
+.logo span { color: var(--accent); }
+.nav-links { display: flex; align-items: center; gap: 22px; color: var(--muted); font-size: 0.875rem; }
+.nav-links a { transition: color 0.2s; }
+.nav-links a:hover { color: var(--ink); }
+#authLinks { display: flex; align-items: center; gap: 16px; }
+.nav-cta {
+  color: var(--paper) !important;
+  background: var(--ink);
+  padding: 9px 18px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.875rem;
+  transition: background 0.2s, transform 0.15s;
+}
+.nav-cta:hover { background: var(--accent); transform: scale(1.03); }
+
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 100px 20px 80px;
+}
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  will-change: transform;
+}
+.hero-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.35;
+  will-change: transform;
+}
+.blob1 { width: 600px; height: 500px; background: #f5c4b3; top: -80px; left: -100px; }
+.blob2 { width: 500px; height: 500px; background: #b5d4f4; top: 10%; right: -120px; }
+.blob3 { width: 400px; height: 350px; background: #c0dd97; bottom: 0; left: 30%; }
+.blob4 { width: 350px; height: 300px; background: #CECBF6; bottom: 10%; left: 5%; }
+.hero-grid-lines {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(21,21,21,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(21,21,21,0.04) 1px, transparent 1px);
+  background-size: 52px 52px;
+  mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
+}
+.hero-inner {
+  position: relative;
+  z-index: 2;
+  width: min(900px, 100%);
+  text-align: center;
+}
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 0 16px;
+  border: 1px solid rgba(192,39,31,0.25);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.85);
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  backdrop-filter: blur(8px);
+  animation: fadeUp 0.6s ease both;
+}
+.eyebrow-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); animation: pulse 2s ease infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.7)} }
+h1 {
+  margin: 22px auto 16px;
+  max-width: 830px;
+  font-size: clamp(3rem, 8vw, 6rem);
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+  font-weight: 800;
+  animation: fadeUp 0.7s 0.1s ease both;
+}
+.h1-highlight { color: var(--accent); position: relative; display: inline-block; }
+.h1-highlight::after {
+  content: '';
+  position: absolute;
+  left: 0; bottom: 4px; right: 0;
+  height: 6px;
+  background: rgba(192,39,31,0.15);
+  border-radius: 3px;
+  z-index: -1;
+}
+.hero-copy {
+  max-width: 580px;
+  margin: 0 auto;
+  color: var(--muted);
+  font-size: clamp(1rem, 2vw, 1.18rem);
+  line-height: 1.65;
+  animation: fadeUp 0.7s 0.2s ease both;
+}
+.search-wrap {
+  width: min(760px, 100%);
+  margin: 44px auto 0;
+  animation: fadeUp 0.7s 0.3s ease both;
+}
+.search-box {
+  height: 66px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.9);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 40px rgba(21,21,21,0.1), 0 0 0 4px rgba(192,39,31,0.06);
+  transition: box-shadow 0.25s;
+}
+.search-box:focus-within {
+  box-shadow: 0 8px 40px rgba(21,21,21,0.14), 0 0 0 4px rgba(192,39,31,0.18);
+}
+.search-box input {
+  width: 100%;
+  border: 0; outline: 0;
+  padding: 0 20px;
+  color: var(--ink);
+  background: transparent;
+  font-size: 1rem;
+}
+.search-box input::placeholder { color: #aaa; }
+.search-btn {
+  min-width: 120px;
+  border: 0;
+  border-radius: 999px;
+  color: var(--paper);
+  background: var(--accent);
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.9rem;
+  transition: background 0.2s, transform 0.15s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.search-btn:hover { background: #a31f18; transform: scale(1.03); }
+.search-btn svg { width: 16px; height: 16px; }
+.filters {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+.filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 34px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.8);
+  color: var(--ink);
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  backdrop-filter: blur(8px);
+}
+.filter:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(21,21,21,0.09); }
+.filter-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.hero-stats {
+  display: flex;
+  justify-content: center;
+  gap: 36px;
+  margin-top: 52px;
+  flex-wrap: wrap;
+  animation: fadeUp 0.7s 0.4s ease both;
+}
+.stat { text-align: center; }
+.stat-num { font-size: 1.8rem; font-weight: 800; letter-spacing: -0.03em; }
+.stat-lbl { font-size: 0.8rem; color: var(--muted); margin-top: 2px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.07em; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+
+.section-spacer { height: 1px; background: linear-gradient(90deg, transparent, var(--line), transparent); }
+
+section { padding: 96px 20px; }
+.section-inner { width: min(1120px, 100%); margin: 0 auto; }
+.section-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 32px;
+  margin-bottom: 40px;
+}
+.kicker {
+  display: inline-flex; align-items: center; gap: 8px;
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.kicker::before { content:''; width: 18px; height: 2px; background: var(--accent); border-radius: 1px; }
+h2 {
+  max-width: 650px;
+  font-size: clamp(2rem, 4vw, 3.4rem);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  font-weight: 800;
+}
+.section-note { max-width: 340px; color: var(--muted); font-size: 1rem; line-height: 1.65; }
+.product { background: var(--paper); }
+
+.system-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
+}
+.system {
+  min-height: 220px;
+  padding: 24px 20px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: var(--paper);
+  transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+  cursor: default;
+  position: relative;
+  overflow: hidden;
+}
+.system::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: var(--tone);
+  border-radius: 16px 16px 0 0;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s;
+}
+.system:hover::before { transform: scaleX(1); }
+.system:hover { transform: translateY(-5px); box-shadow: 0 16px 40px rgba(21,21,21,0.1); border-color: rgba(21,21,21,0.15); }
+.system-mark {
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--tone-soft);
+  border: 1px solid var(--tone-border);
+  font-size: 18px;
+}
+.system h3 { margin-top: 0; font-size: 0.98rem; line-height: 1.25; font-weight: 700; }
+.system p { margin-top: 7px; color: var(--muted); font-size: 0.86rem; line-height: 1.5; }
+
+.helpful { background: var(--soft); }
+.benefit-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.benefit {
+  padding: 32px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--paper);
+  transition: transform 0.25s, box-shadow 0.25s;
+  position: relative;
+  overflow: hidden;
+}
+.benefit::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--b-color1), var(--b-color2));
+  border-radius: 0 0 16px 16px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.benefit:hover::after { opacity: 1; }
+.benefit:hover { transform: translateY(-4px); box-shadow: 0 12px 36px rgba(21,21,21,0.09); }
+.benefit-icon {
+  width: 48px; height: 48px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  margin-bottom: 24px;
+}
+.benefit h3 { font-size: 1.22rem; margin-bottom: 10px; font-weight: 700; }
+.benefit p { color: var(--muted); line-height: 1.65; }
+.benefit-tag {
+  display: inline-block;
+  margin-top: 18px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.use { background: var(--paper); }
+.steps-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.step {
+  padding: 32px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--paper);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.25s, box-shadow 0.25s;
+}
+.step:hover { transform: translateY(-4px); box-shadow: 0 12px 36px rgba(21,21,21,0.09); }
+.step-num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  color: var(--paper);
+  font-weight: 800;
+  font-size: 1rem;
+  margin-bottom: 52px;
+  position: relative;
+  z-index: 1;
+}
+.step-bg {
+  position: absolute;
+  top: -20px; right: -20px;
+  width: 130px; height: 130px;
+  border-radius: 50%;
+  opacity: 0.06;
+}
+.step h3 { font-size: 1.22rem; margin-bottom: 10px; font-weight: 700; }
+.step p { color: var(--muted); line-height: 1.65; }
+
+.connector { display: none; }
+
+.cta-section {
+  padding: 80px 20px;
+  background: var(--ink);
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+}
+.cta-blobs { position: absolute; inset: 0; pointer-events: none; }
+.cta-blob { position: absolute; border-radius: 50%; filter: blur(50px); opacity: 0.2; }
+.cta-blob1 { width: 400px; height: 300px; background: #c0271f; top: -50px; left: 10%; }
+.cta-blob2 { width: 350px; height: 350px; background: #185fa5; bottom: -50px; right: 15%; }
+.cta-inner { position: relative; z-index: 2; }
+.cta-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.7);
+  font-size: 0.78rem; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  margin-bottom: 24px;
+}
+.cta-section h2 { color: #fff; max-width: 600px; margin: 0 auto 16px; }
+.cta-section p { color: rgba(255,255,255,0.6); max-width: 480px; margin: 0 auto 36px; font-size: 1.05rem; }
+.cta-btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 14px 28px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 700; font-size: 1rem;
+  border: 0; cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+  text-decoration: none;
+}
+.cta-btn:hover { background: #a31f18; transform: scale(1.03); }
+
+.footer {
+  padding: 36px 20px;
+  border-top: 1px solid var(--line);
+  background: var(--ink);
+  color: var(--paper);
+}
+.footer-inner {
+  width: min(1120px, 100%);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+.footer-meta { color: rgba(255,255,255,0.5); font-size: 0.875rem; margin-top: 4px; }
+.footer-links { display: flex; gap: 20px; color: rgba(255,255,255,0.65); font-size: 0.875rem; }
+.footer-links a { transition: color 0.2s; }
+.footer-links a:hover { color: #fff; }
+
+.appear { opacity: 0; transform: translateY(24px); transition: opacity 0.6s ease, transform 0.6s ease; }
+.appear.visible { opacity: 1; transform: none; }
+
+@media (max-width: 980px) {
+  .system-grid, .benefit-grid, .steps-grid { grid-template-columns: 1fr 1fr; }
+  .section-head { flex-direction: column; }
+}
+@media (max-width: 620px) {
+  .system-grid, .benefit-grid, .steps-grid { grid-template-columns: 1fr; }
+  .nav-links a:not(.nav-cta) { display: none; }
+  .search-box { height: auto; grid-template-columns: 1fr; border-radius: 20px; }
+  .search-box input { min-height: 48px; text-align: center; }
+  .search-btn { min-height: 48px; width: 100%; border-radius: 12px; }
+  .hero-stats { gap: 20px; }
+}
+</style>
+</head>
+<body>
+
+<nav class="nav" aria-label="Primary navigation">
+  <div class="nav-inner">
+    <a class="logo" href="/">Common<span>Source</span></a>
+    <div class="nav-links">
+      <a href="#product">The product</a>
+      <a href="#helpful">Why it helps</a>
+      <a href="#use">How to use</a>
+      <span id="authLinks"></span>
+      <a class="nav-cta" href="/search">Live demo →</a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero" id="hero">
+  <div class="hero-bg" id="parallaxBg">
+    <div class="hero-blob blob1" id="blob1"></div>
+    <div class="hero-blob blob2" id="blob2"></div>
+    <div class="hero-blob blob3" id="blob3"></div>
+    <div class="hero-blob blob4" id="blob4"></div>
+    <div class="hero-grid-lines"></div>
+  </div>
+  <div class="hero-inner">
+    <div class="eyebrow">
+      <span class="eyebrow-dot"></span>
+      Community Media Alliance
+    </div>
+    <h1>Search local knowledge<br><span class="h1-highlight">with context.</span></h1>
+    <p class="hero-copy">CommonSource brings community media, civic guidance, public data, and field knowledge into one clean, source-aware search experience.</p>
+    <form class="search-wrap" action="/search" method="get" id="landingSearchForm">
+      <div class="search-box">
+        <input type="search" name="q" placeholder="Ask about a place, issue, or community need" aria-label="Search CommonSource" id="heroSearch">
+        <button class="search-btn" type="submit">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6.5" cy="6.5" r="4.5"/><path d="M10.5 10.5L14 14"/></svg>
+          Search
+        </button>
+      </div>
+      <div class="filters" aria-label="Knowledge categories">
+        <span class="filter" role="button" tabindex="0" data-query="news media" onclick="selectFilter(this, '#c0271f')"><span class="filter-dot" style="background:#c0271f"></span>News &amp; Media</span>
+        <span class="filter" role="button" tabindex="0" data-query="development reports" onclick="selectFilter(this, '#185fa5')"><span class="filter-dot" style="background:#185fa5"></span>Development</span>
+        <span class="filter" role="button" tabindex="0" data-query="civic guidance" onclick="selectFilter(this, '#854f0b')"><span class="filter-dot" style="background:#854f0b"></span>Civic Guidance</span>
+        <span class="filter" role="button" tabindex="0" data-query="public data" onclick="selectFilter(this, '#0f6e56')"><span class="filter-dot" style="background:#0f6e56"></span>Public Data</span>
+        <span class="filter" role="button" tabindex="0" data-query="contradictions gaps" onclick="selectFilter(this, '#534ab7')"><span class="filter-dot" style="background:#534ab7"></span>Contradictions</span>
+      </div>
+    </form>
+    <div class="hero-stats">
+      <div class="stat"><div class="stat-num" id="counter1">0</div><div class="stat-lbl">Sources indexed</div></div>
+      <div style="width:1px;background:var(--line);height:40px;align-self:center"></div>
+      <div class="stat"><div class="stat-num" id="counter2">0</div><div class="stat-lbl">Communities covered</div></div>
+      <div style="width:1px;background:var(--line);height:40px;align-self:center"></div>
+      <div class="stat"><div class="stat-num" id="counter3">0</div><div class="stat-lbl">Knowledge layers</div></div>
+    </div>
+  </div>
+</section>
+
+<div class="section-spacer"></div>
+
+<section class="product" id="product">
+  <div class="section-inner">
+    <div class="section-head appear">
+      <div>
+        <div class="kicker">The Product</div>
+        <h2>Five knowledge systems,<br>one source-aware result.</h2>
+      </div>
+      <p class="section-note">Each search separates evidence by type — so you see what is reported, documented, promised, measured, and disputed.</p>
+    </div>
+    <div class="system-grid">
+      <article class="system appear" style="--tone: #c0271f; --tone-soft: #faece7; --tone-border: #f5c4b3; transition-delay: 0.05s">
+        <div class="system-mark">📰</div>
+        <div><h3>News &amp; Media</h3><p>Local reporting, community radio, and publisher archives.</p></div>
+      </article>
+      <article class="system appear" style="--tone: #185fa5; --tone-soft: #e6f1fb; --tone-border: #b5d4f4; transition-delay: 0.1s">
+        <div class="system-mark">📋</div>
+        <div><h3>Development Knowledge</h3><p>Reports, field notes, programme learning, and evaluations.</p></div>
+      </article>
+      <article class="system appear" style="--tone: #854f0b; --tone-soft: #faeeda; --tone-border: #fac775; transition-delay: 0.15s">
+        <div class="system-mark">🏛️</div>
+        <div><h3>Civic Guidance</h3><p>Rights, entitlements, public guidance, and service protocols.</p></div>
+      </article>
+      <article class="system appear" style="--tone: #0f6e56; --tone-soft: #e1f5ee; --tone-border: #9fe1cb; transition-delay: 0.2s">
+        <div class="system-mark">📊</div>
+        <div><h3>Public Data</h3><p>Government datasets, dashboards, schemes, and official records.</p></div>
+      </article>
+      <article class="system appear" style="--tone: #534ab7; --tone-soft: #eeedfe; --tone-border: #afa9ec; transition-delay: 0.25s">
+        <div class="system-mark">⚡</div>
+        <div><h3>Contradictions</h3><p>Where sources disagree, gaps appear, or follow-up reporting begins.</p></div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<div class="section-spacer"></div>
+
+<section class="helpful" id="helpful">
+  <div class="section-inner">
+    <div class="section-head appear">
+      <div>
+        <div class="kicker">Why it is helpful</div>
+        <h2>Clearer discovery for work<br>that usually stays hidden.</h2>
+      </div>
+    </div>
+    <div class="benefit-grid">
+      <article class="benefit appear" style="--b-color1: #c0271f; --b-color2: #f09595; transition-delay: 0.05s">
+        <div class="benefit-icon" style="background:#faece7; color:#c0271f;">🔍</div>
+        <h3>Find local evidence</h3>
+        <p>Surface reporting and community knowledge that commercial search often misses or buries beneath national coverage.</p>
+        <span class="benefit-tag" style="background:#faece7; color:#993c1d;">Discovery</span>
+      </article>
+      <article class="benefit appear" style="--b-color1: #185fa5; --b-color2: #85b7eb; transition-delay: 0.1s">
+        <div class="benefit-icon" style="background:#e6f1fb; color:#185fa5;">🔗</div>
+        <h3>Keep sources visible</h3>
+        <p>Every answer stays linked to named publishers, places, and original material — no black-box summaries.</p>
+        <span class="benefit-tag" style="background:#e6f1fb; color:#185fa5;">Transparency</span>
+      </article>
+      <article class="benefit appear" style="--b-color1: #0f6e56; --b-color2: #5dcaa5; transition-delay: 0.15s">
+        <div class="benefit-icon" style="background:#e1f5ee; color:#0f6e56;">📐</div>
+        <h3>Spot the gaps</h3>
+        <p>Compare layers quickly to see what is confirmed, missing, or in conflict — so you know where to look next.</p>
+        <span class="benefit-tag" style="background:#e1f5ee; color:#085041;">Analysis</span>
+      </article>
+    </div>
+  </div>
+</section>
+
+<div class="section-spacer"></div>
+
+<section class="use" id="use">
+  <div class="section-inner">
+    <div class="section-head appear">
+      <div>
+        <div class="kicker">How to use it</div>
+        <h2>Ask, filter,<br>follow the source.</h2>
+      </div>
+      <p class="section-note">Built for researchers, journalists, civic teams, and community media networks who need credible, attributable knowledge.</p>
+    </div>
+    <div class="steps-grid">
+      <article class="step appear" style="transition-delay: 0.05s">
+        <div class="step-bg" style="background: #c0271f;"></div>
+        <div class="step-num" style="background: #c0271f;">1</div>
+        <h3>Search a question</h3>
+        <p>Enter a place, topic, issue, or public service query. Use natural language — no keywords needed.</p>
+      </article>
+      <article class="step appear" style="transition-delay: 0.1s">
+        <div class="step-bg" style="background: #185fa5;"></div>
+        <div class="step-num" style="background: #185fa5;">2</div>
+        <h3>Choose a layer</h3>
+        <p>Use the five category filters to focus on the type of evidence you need — news, data, guidance, or conflict.</p>
+      </article>
+      <article class="step appear" style="transition-delay: 0.15s">
+        <div class="step-bg" style="background: #0f6e56;"></div>
+        <div class="step-num" style="background: #0f6e56;">3</div>
+        <h3>Open the source</h3>
+        <p>Read the original item, cite it with confidence, and follow the publisher directly to their full archive.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="cta-section">
+  <div class="cta-blobs">
+    <div class="cta-blob cta-blob1"></div>
+    <div class="cta-blob cta-blob2"></div>
+  </div>
+  <div class="cta-inner appear">
+    <div class="cta-eyebrow">Community-governed search</div>
+    <h2>Ready to search with context?</h2>
+    <p>Join researchers and civic teams already using CommonSource to surface what matters locally.</p>
+    <a href="/search" class="cta-btn">Try the live demo →</a>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div>
+      <a class="logo" href="/" aria-label="CommonSource home">Common<span>Source</span></a>
+      <div class="footer-meta">Community-governed search for public-interest knowledge.</div>
+    </div>
+    <div class="footer-links">
+      <a href="/search">Demo</a>
+      <a href="mailto:abeer@smartngo.org">Contact</a>
+      <a href="#product">About</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function() {
+  const API = window.location.protocol === 'file:' ? 'http://localhost:5050' : '';
+  const ACCESS_TOKEN_KEY = 'cs_access_token';
+  const REFRESH_TOKEN_KEY = 'cs_refresh_token';
+  const USER_KEY = 'cs_user';
+  let activeFilterQuery = '';
+  let metricTargets = { sources: 84000, communities: 320, layers: 5 };
+
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, c => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;',
+    }[c]));
+  }
+
+  function readUser() {
+    try {
+      return JSON.parse(localStorage.getItem(USER_KEY) || 'null');
+    } catch {
+      return null;
+    }
+  }
+
+  function clearAuthState() {
+    localStorage.removeItem(ACCESS_TOKEN_KEY);
+    localStorage.removeItem(REFRESH_TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+  }
+
+  async function logoutUser() {
+    const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY) || '';
+    try {
+      await fetch(`${API}/api/auth/logout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(localStorage.getItem(ACCESS_TOKEN_KEY) ? { Authorization: `Bearer ${localStorage.getItem(ACCESS_TOKEN_KEY)}` } : {}),
+        },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+      });
+    } catch {
+      // Local state still needs to be cleared if the backend is unreachable.
+    } finally {
+      clearAuthState();
+      window.location.href = '/login';
+    }
+  }
+
+  function renderAuthLinks() {
+    const authLinks = document.getElementById('authLinks');
+    if (!authLinks) return;
+    const user = readUser();
+    const hasToken = Boolean(localStorage.getItem(ACCESS_TOKEN_KEY));
+    authLinks.innerHTML = hasToken && user
+      ? `<a href="/dashboard">Dashboard</a><a href="/profile">Profile</a><a href="#" id="landingLogout">Logout</a>`
+      : '<a href="/login">Login</a><a href="/register">Register</a>';
+    document.getElementById('landingLogout')?.addEventListener('click', event => {
+      event.preventDefault();
+      logoutUser();
+    });
+  }
+
+  function goToSearch() {
+    const input = document.getElementById('heroSearch');
+    const query = (input?.value || '').trim() || activeFilterQuery;
+    if (!query) {
+      input?.focus();
+      return;
+    }
+    const url = new URL('/search', window.location.origin);
+    url.searchParams.set('q', query);
+    window.location.href = url.pathname + url.search;
+  }
+
+  function startTypewriterPlaceholder(input, examples) {
+    if (!input || !examples.length) return;
+    const basePlaceholder = input.getAttribute('placeholder') || '';
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+      input.placeholder = examples[0];
+      return;
+    }
+    let exampleIndex = 0;
+    let charIndex = 0;
+    let deleting = false;
+    let paused = false;
+    const tick = () => {
+      if (input.value.trim()) {
+        window.setTimeout(tick, 900);
+        return;
+      }
+      const phrase = examples[exampleIndex];
+      input.placeholder = `${phrase.slice(0, charIndex)}|`;
+      if (paused) {
+        paused = false;
+        deleting = true;
+        window.setTimeout(tick, 950);
+        return;
+      }
+      if (!deleting && charIndex < phrase.length) {
+        charIndex += 1;
+        window.setTimeout(tick, 52);
+        return;
+      }
+      if (!deleting && charIndex >= phrase.length) {
+        paused = true;
+        window.setTimeout(tick, 1100);
+        return;
+      }
+      if (deleting && charIndex > 0) {
+        charIndex -= 1;
+        window.setTimeout(tick, 24);
+        return;
+      }
+      deleting = false;
+      exampleIndex = (exampleIndex + 1) % examples.length;
+      input.placeholder = basePlaceholder;
+      window.setTimeout(tick, 260);
+    };
+    tick();
+  }
+
+  function metricValue(metrics, keys, fallback) {
+    for (const key of keys) {
+      const value = Number(metrics?.[key]);
+      if (Number.isFinite(value) && value >= 0) return value;
+    }
+    return fallback;
+  }
+
+  async function loadLandingMetrics() {
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), 3000);
+    try {
+      const res = await fetch(`${API}/api/home/discovery`, { signal: controller.signal });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      const metrics = data.metrics || data || {};
+      metricTargets = {
+        sources: metricValue(metrics, ['documents_indexed', 'total_documents', 'documents', 'articles', 'article_count'], metricTargets.sources),
+        communities: metricValue(metrics, ['communities', 'publishers', 'publisher_count', 'topics_available', 'topics'], metricTargets.communities),
+        layers: metricValue(metrics, ['knowledge_layers', 'source_layers', 'source_types'], metricTargets.layers),
+      };
+    } catch {
+      // Keep the designed demo values when local metrics are unavailable.
+    } finally {
+      window.clearTimeout(timer);
+    }
+  }
+
+  renderAuthLinks();
+  const metricsReady = loadLandingMetrics();
+  startTypewriterPlaceholder(document.getElementById('heroSearch'), [
+    'Try: dengue radio scripts',
+    'Ask: maternal health reports',
+    'Search: water scarcity evidence',
+    'Find: local campaigns and public data',
+  ]);
+
+  document.getElementById('landingSearchForm')?.addEventListener('submit', event => {
+    event.preventDefault();
+    goToSearch();
+  });
+
+  document.querySelectorAll('.filter').forEach(filter => {
+    filter.addEventListener('keydown', event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        const dot = filter.querySelector('.filter-dot');
+        window.selectFilter(filter, dot?.style.background || '#c0271f');
+      }
+    });
+  });
+
+  const blobs = [
+    { el: document.getElementById('blob1'), sx: 0.03, sy: 0.04 },
+    { el: document.getElementById('blob2'), sx: -0.04, sy: 0.03 },
+    { el: document.getElementById('blob3'), sx: 0.025, sy: -0.035 },
+    { el: document.getElementById('blob4'), sx: -0.03, sy: -0.04 },
+  ];
+  let ticking = false;
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(() => {
+        const y = window.scrollY;
+        blobs.forEach(b => {
+          if (b.el) b.el.style.transform = `translate(${y * b.sx}px, ${y * b.sy}px)`;
+        });
+        ticking = false;
+      });
+      ticking = true;
+    }
+  });
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); }});
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.appear').forEach(el => observer.observe(el));
+
+  function animCount(el, target, suffix, dur) {
+    let start = null;
+    function step(ts) {
+      if (!start) start = ts;
+      const p = Math.min((ts - start) / dur, 1);
+      const ease = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(ease * target).toLocaleString() + suffix;
+      if (p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  const statsObs = new IntersectionObserver(entries => {
+    if (entries[0].isIntersecting) {
+      metricsReady.finally(() => {
+        animCount(document.getElementById('counter1'), metricTargets.sources, '+', 1600);
+        animCount(document.getElementById('counter2'), metricTargets.communities, '+', 1400);
+        animCount(document.getElementById('counter3'), metricTargets.layers, '', 800);
+      });
+      statsObs.disconnect();
+    }
+  }, { threshold: 0.5 });
+  statsObs.observe(document.querySelector('.hero-stats'));
+
+  window.selectFilter = function(el, color) {
+    const active = el.getAttribute('data-active');
+    document.querySelectorAll('.filter').forEach(item => {
+      const dot = item.querySelector('.filter-dot');
+      if (dot && !dot.dataset.originalColor) dot.dataset.originalColor = dot.style.background;
+      item.removeAttribute('data-active');
+      item.style.background = 'rgba(255,255,255,0.8)';
+      item.style.color = 'var(--ink)';
+      item.style.borderColor = 'var(--line)';
+      item.style.boxShadow = '';
+      if (dot?.dataset.originalColor) dot.style.background = dot.dataset.originalColor;
+    });
+    if (active) {
+      activeFilterQuery = '';
+      el.removeAttribute('data-active');
+    } else {
+      activeFilterQuery = el.dataset.query || el.textContent.trim();
+      const input = document.getElementById('heroSearch');
+      if (input && !input.value.trim()) input.value = activeFilterQuery;
+      el.setAttribute('data-active', '1');
+      el.style.background = color;
+      el.style.color = '#fff';
+      el.style.borderColor = color;
+      el.style.boxShadow = '0 4px 14px ' + color + '55';
+      el.querySelector('.filter-dot').style.background = '#ffffff88';
+    }
+  };
+})();
+</script>
+</body>
+</html>

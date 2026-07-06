@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Publisher Applications - CommonSource</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --red: #C0271F; --dark: #1A1A1A; --mid: #4A4A4A; --light: #8A8A8A;
+  --rule: #E0DDD8; --bg: #F7F6F2; --white: #FFFFFF;
+  --serif: Georgia, 'Times New Roman', serif;
+  --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+body { font-family: var(--sans); background: var(--bg); color: var(--dark); min-height: 100vh; }
+header { background: var(--dark); border-bottom: 3px solid var(--red); padding: 0 24px; }
+.header-inner { max-width: 980px; margin: 0 auto; padding: 22px 0; display: flex; justify-content: space-between; align-items: center; gap: 18px; }
+.logo { font-family: var(--serif); font-size: 1.5rem; font-weight: 700; color: var(--white); text-decoration: none; }
+.logo span { color: var(--red); }
+.nav { display: flex; gap: 8px; flex-wrap: wrap; }
+.nav a, .nav button { color: #CCC; background: transparent; border: 1px solid #444; border-radius: 4px; padding: 7px 10px; font-size: 0.76rem; text-decoration: none; cursor: pointer; }
+main { max-width: 980px; margin: 0 auto; padding: 32px 24px 72px; }
+h1 { font-family: var(--serif); font-size: 1.65rem; margin-bottom: 8px; }
+.muted { color: var(--mid); font-size: 0.86rem; line-height: 1.55; }
+.status { min-height: 22px; color: var(--light); font-size: 0.8rem; margin: 14px 0; }
+.status.error { color: var(--red); }
+.toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin: 18px 0; }
+.input { font-family: var(--sans); font-size: 0.86rem; padding: 9px 10px; border: 1px solid var(--rule); border-radius: 4px; background: var(--white); color: var(--dark); outline: none; }
+.btn { font-family: var(--sans); font-size: 0.76rem; font-weight: 700; padding: 8px 11px; background: var(--red); color: var(--white); border: none; border-radius: 4px; cursor: pointer; }
+.btn.secondary { background: var(--white); color: var(--mid); border: 1px solid var(--rule); }
+.panel { background: var(--white); border: 1px solid var(--rule); border-radius: 4px; padding: 16px; }
+.item { border-bottom: 1px solid var(--rule); padding: 12px 0; }
+.item:last-child { border-bottom: 0; }
+.item-head { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
+.item h2 { font-size: 0.98rem; }
+.badge { border: 1px solid var(--rule); border-radius: 999px; padding: 4px 8px; color: var(--mid); font-size: 0.72rem; background: var(--bg); }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.empty { color: var(--light); font-size: 0.84rem; padding: 16px 0; }
+</style>
+<link rel="stylesheet" href="/theme.css">
+</head>
+<body>
+<header>
+  <div class="header-inner">
+    <a class="logo" href="/search">Common<span>Source</span></a>
+    <div class="nav" data-role-nav></div>
+  </div>
+</header>
+<main>
+  <h1>Publisher Applications</h1>
+  <p class="muted">Review reader requests for publisher access.</p>
+  <div class="toolbar">
+    <select class="input" id="status-filter">
+      <option value="pending">Pending</option>
+      <option value="">All</option>
+      <option value="approved">Approved</option>
+      <option value="rejected">Rejected</option>
+    </select>
+    <input class="input" id="search-filter" placeholder="Search organization or email">
+    <button class="btn secondary" onclick="loadApplications()">Refresh</button>
+  </div>
+  <div class="status" id="status" role="status"></div>
+  <section class="panel" id="applications"><div class="empty">Loading...</div></section>
+</main>
+<script src="/common-nav.js"></script>
+<script>
+const API = window.location.protocol === 'file:' ? 'http://localhost:5050' : '';
+const ACCESS_TOKEN_KEY = 'cs_access_token';
+const REFRESH_TOKEN_KEY = 'cs_refresh_token';
+let csrfToken = '';
+function escHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function getToken() { return localStorage.getItem(ACCESS_TOKEN_KEY) || ''; }
+function clearAuthState() { localStorage.removeItem(ACCESS_TOKEN_KEY); localStorage.removeItem(REFRESH_TOKEN_KEY); localStorage.removeItem('cs_user'); csrfToken = ''; }
+function setStatus(message, isError = false) {
+  const el = document.getElementById('status');
+  el.textContent = message || '';
+  el.classList.toggle('error', !!isError);
+}
+async function getCsrfToken() {
+  if (csrfToken) return csrfToken;
+  const res = await fetch(`${API}/api/auth/csrf`, { headers: { Authorization: `Bearer ${getToken()}` } });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
+  csrfToken = data.csrf_token || '';
+  return csrfToken;
+}
+async function fetchJson(path, options = {}) {
+  const token = getToken();
+  if (!token) { window.location.href = '/login'; throw new Error('Login required'); }
+  const method = (options.method || 'GET').toUpperCase();
+  const headers = { ...(options.headers || {}), Authorization: `Bearer ${token}` };
+  if (['POST','PUT','PATCH','DELETE'].includes(method)) headers['X-CSRF-Token'] = await getCsrfToken();
+  const res = await fetch(`${API}${path}`, { ...options, headers });
+  const data = await res.json().catch(() => ({}));
+  if (res.status === 401) { clearAuthState(); window.location.href = '/login'; }
+  if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
+  return data;
+}
+async function logoutUser() {
+  try {
+    await fetch(`${API}/api/auth/logout`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}) },
+      body: JSON.stringify({ refresh_token: localStorage.getItem(REFRESH_TOKEN_KEY) || '' })
+    });
+  } finally {
+    clearAuthState();
+    window.location.href = '/login';
+  }
+}
+function renderApplications(applications) {
+  document.getElementById('applications').innerHTML = applications.length ? applications.map(app => `
+    <article class="item">
+      <div class="item-head">
+        <h2>${escHtml(app.organization_name)}</h2>
+        <span class="badge">${escHtml(app.status)}</span>
+      </div>
+      <p class="muted">${escHtml(app.user_email)} Â· ${escHtml(app.website || 'No website')}</p>
+      <p class="muted" style="margin-top:6px">${escHtml(app.reason)}</p>
+      <div class="actions">
+        ${app.status === 'pending' ? `
+          <button class="btn" onclick="reviewApplication('${escHtml(app.id)}', 'approve')">Approve</button>
+          <button class="btn secondary" onclick="reviewApplication('${escHtml(app.id)}', 'reject')">Reject</button>
+        ` : ''}
+      </div>
+    </article>
+  `).join('') : '<div class="empty">No applications found.</div>';
+}
+async function loadApplications() {
+  setStatus('Loading applications...');
+  try {
+    const status = document.getElementById('status-filter').value;
+    const search = document.getElementById('search-filter').value.trim();
+    const params = new URLSearchParams();
+    if (status) params.set('status', status);
+    if (search) params.set('search', search);
+    const data = await fetchJson(`/api/admin/publisher-applications?${params}`);
+    renderApplications(data.applications || []);
+    setStatus('');
+  } catch (err) {
+    setStatus(err.message || 'Could not load applications.', true);
+  }
+}
+async function reviewApplication(id, action) {
+  setStatus(`${action === 'approve' ? 'Approving' : 'Rejecting'} application...`);
+  try {
+    await fetchJson(`/api/admin/publisher-applications/${encodeURIComponent(id)}/${action}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ review_notes: '' })
+    });
+    await loadApplications();
+    setStatus(`Application ${action === 'approve' ? 'approved' : 'rejected'}.`);
+  } catch (err) {
+    setStatus(err.message || 'Could not review application.', true);
+  }
+}
+document.getElementById('status-filter').addEventListener('change', loadApplications);
+document.getElementById('search-filter').addEventListener('input', () => {
+  clearTimeout(window.__appSearchTimer);
+  window.__appSearchTimer = setTimeout(loadApplications, 250);
+});
+document.addEventListener('DOMContentLoaded', loadApplications);
+</script>
+</body>
+</html>

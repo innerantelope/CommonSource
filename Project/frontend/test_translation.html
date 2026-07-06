@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Translation Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; }
+        input, textarea { width: 100%; padding: 10px; margin: 10px 0; font-size: 14px; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .result { margin-top: 20px; padding: 15px; border: 1px solid #ccc; }
+        .loading { color: orange; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+<link rel="stylesheet" href="/theme.css">
+</head>
+<body>
+    <h1>Translation Frontend Test</h1>
+
+    <div>
+        <label>Text to translate:</label>
+        <textarea id="textInput" rows="4">Hello world, this is a test message.</textarea>
+    </div>
+
+    <div>
+        <label>Target Language:</label>
+        <select id="targetLang">
+            <option value="hi">Hindi</option>
+            <option value="en">English</option>
+            <option value="bn">Bengali</option>
+            <option value="ta">Tamil</option>
+        </select>
+    </div>
+
+    <button onclick="doTranslate()">Translate</button>
+
+    <div id="result" class="result" style="display: none;">
+        <div id="status"></div>
+        <div id="content"></div>
+        <div id="timing"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5050';
+
+        function doTranslate() {
+            const text = document.getElementById('textInput').value.trim();
+            const target = document.getElementById('targetLang').value;
+            const resultDiv = document.getElementById('result');
+            const statusDiv = document.getElementById('status');
+            const contentDiv = document.getElementById('content');
+            const timingDiv = document.getElementById('timing');
+
+            if (!text) {
+                statusDiv.textContent = 'Please enter text to translate';
+                resultDiv.style.display = 'block';
+                return;
+            }
+
+            statusDiv.innerHTML = '<div class="loading">â³ Translating...</div>';
+            contentDiv.textContent = '';
+            timingDiv.textContent = '';
+            resultDiv.style.display = 'block';
+
+            const t0 = Date.now();
+
+            fetch(`${API_BASE}/api/translate`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text, target })
+            })
+            .then(r => {
+                const elapsed = Date.now() - t0;
+                if (!r.ok) {
+                    throw new Error(`HTTP ${r.status}`);
+                }
+                return r.json().then(data => ({ data, elapsed }));
+            })
+            .then(({ data, elapsed }) => {
+                statusDiv.innerHTML = `<div class="success">âœ“ Translation successful</div>`;
+                contentDiv.innerHTML = `<strong>Result:</strong><br>${data.translation}<br><br><strong>Model:</strong> ${data.model}`;
+                timingDiv.textContent = `Response time: ${elapsed}ms`;
+            })
+            .catch(err => {
+                statusDiv.innerHTML = `<div class="error">âœ— Error: ${err.message}</div>`;
+            });
+        }
+
+        // Allow Enter key to translate
+        document.getElementById('textInput').addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'Enter') {
+                doTranslate();
+            }
+        });
+    </script>
+</body>
+</html>

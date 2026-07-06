@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard - CommonSource</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root { --red:#C0271F; --dark:#1A1A1A; --mid:#4A4A4A; --light:#8A8A8A; --rule:#E0DDD8; --bg:#F7F6F2; --white:#FFFFFF; --serif:Georgia,'Times New Roman',serif; --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; }
+body { font-family:var(--sans); background:var(--bg); color:var(--dark); min-height:100vh; }
+header { background:var(--dark); border-bottom:3px solid var(--red); padding:0 24px; }
+.header-inner { max-width:1040px; margin:0 auto; padding:22px 0; display:flex; justify-content:space-between; align-items:center; gap:18px; }
+.logo { font-family:var(--serif); font-size:1.55rem; font-weight:700; color:var(--white); text-decoration:none; }
+.logo span { color:var(--red); }
+.nav { display:flex; gap:8px; flex-wrap:wrap; }
+.nav a, .nav button { color:#CCC; background:transparent; border:1px solid #444; border-radius:4px; padding:7px 10px; font-size:.76rem; text-decoration:none; cursor:pointer; }
+.nav a:hover, .nav button:hover { border-color:#777; color:var(--white); }
+main { max-width:1040px; margin:0 auto; padding:32px 24px 72px; }
+.intro { margin-bottom:24px; }
+.intro h1 { font-family:var(--serif); font-size:1.8rem; margin-bottom:8px; }
+.intro p { color:var(--mid); line-height:1.6; font-size:.92rem; }
+.status { min-height:22px; color:var(--light); font-size:.82rem; margin-bottom:14px; }
+.status.error { color:var(--red); }
+.grid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:18px; align-items:start; }
+.panel { background:var(--white); border:1px solid var(--rule); border-radius:4px; padding:18px; }
+.panel.full { grid-column:1 / -1; }
+.panel h2 { font-size:.82rem; letter-spacing:.09em; text-transform:uppercase; margin-bottom:14px; }
+.stats { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+.stat { border:1px solid var(--rule); border-radius:4px; padding:12px; }
+.stat strong { display:block; font-family:var(--serif); font-size:1.45rem; }
+.stat span { color:var(--light); font-size:.74rem; text-transform:uppercase; letter-spacing:.07em; }
+.item { border-top:1px solid var(--rule); padding:11px 0; }
+.item:first-child { border-top:0; padding-top:0; }
+.item-title { font-family:var(--serif); font-weight:700; color:var(--dark); text-decoration:none; }
+.item-title:hover { color:var(--red); }
+.item-meta { color:var(--light); font-size:.76rem; line-height:1.5; margin-top:4px; }
+.empty { color:var(--light); font-size:.82rem; padding:10px 0; }
+.field-row { display:grid; grid-template-columns:1fr 1fr auto; gap:8px; margin-bottom:12px; }
+.input { width:100%; border:1px solid var(--rule); background:var(--bg); border-radius:4px; padding:9px 10px; font:inherit; }
+.btn { border:0; background:var(--red); color:var(--white); border-radius:4px; padding:9px 12px; font-weight:700; cursor:pointer; }
+.btn.secondary { background:var(--white); color:var(--mid); border:1px solid var(--rule); }
+.collection-head { display:flex; justify-content:space-between; gap:10px; align-items:center; }
+.collection-actions { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
+@media (max-width:760px) { .grid, .stats, .field-row { grid-template-columns:1fr; } .panel.full { grid-column:auto; } .header-inner { flex-direction:column; align-items:flex-start; } }
+</style>
+<link rel="stylesheet" href="/theme.css">
+</head>
+<body>
+<header>
+  <div class="header-inner">
+    <a class="logo" href="/search">Common<span>Source</span></a>
+    <div class="nav" data-role-nav></div>
+  </div>
+</header>
+<main>
+  <section class="intro">
+    <h1>Reader Dashboard</h1>
+    <p>Your saved documents, collections, reading activity, notes, and recommendations in one place.</p>
+  </section>
+  <div class="status" id="status"></div>
+  <section class="panel full">
+    <h2>Reading Statistics</h2>
+    <div class="stats" id="stats"></div>
+  </section>
+  <div class="grid">
+    <section class="panel"><h2>Recent Searches</h2><div id="recent-searches"></div></section>
+    <section class="panel"><h2>Recent Documents</h2><div id="recent-documents"></div></section>
+    <section class="panel" id="bookmarks-panel"><h2>Bookmarks</h2><div id="bookmarks"></div></section>
+    <section class="panel"><h2>Recommended For You</h2><div id="recommendations"></div></section>
+    <section class="panel full" id="collections-panel">
+      <h2>Collections</h2>
+      <div class="field-row">
+        <input class="input" id="collection-name" placeholder="Collection name">
+        <input class="input" id="collection-description" placeholder="Description">
+        <button class="btn" type="button" onclick="createCollection()">Create</button>
+      </div>
+      <div id="collections"></div>
+    </section>
+  </div>
+</main>
+<script src="/common-nav.js"></script>
+<script>
+const API = window.location.protocol === 'file:' ? 'http://localhost:5050' : '';
+const ACCESS_TOKEN_KEY = 'cs_access_token';
+const REFRESH_TOKEN_KEY = 'cs_refresh_token';
+const USER_KEY = 'cs_user';
+let csrfToken = '';
+
+function escHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function getToken() { return localStorage.getItem(ACCESS_TOKEN_KEY) || ''; }
+function clearAuthState() { localStorage.removeItem(ACCESS_TOKEN_KEY); localStorage.removeItem(REFRESH_TOKEN_KEY); localStorage.removeItem(USER_KEY); csrfToken = ''; }
+function setStatus(message, isError=false) { const el=document.getElementById('status'); el.textContent=message||''; el.classList.toggle('error', !!isError); }
+async function getCsrfToken() {
+  if (csrfToken) return csrfToken;
+  const res = await fetch(`${API}/api/auth/csrf`, { headers: { Authorization: `Bearer ${getToken()}` } });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
+  csrfToken = data.csrf_token || '';
+  return csrfToken;
+}
+async function fetchJson(path, options={}) {
+  const token = getToken();
+  if (!token) { window.location.href = '/login'; throw new Error('Login required'); }
+  const method = (options.method || 'GET').toUpperCase();
+  const headers = { ...(options.headers || {}), Authorization: `Bearer ${token}` };
+  if (['POST','PATCH','PUT','DELETE'].includes(method)) headers['X-CSRF-Token'] = headers['X-CSRF-Token'] || await getCsrfToken();
+  const res = await fetch(`${API}${path}`, { ...options, headers });
+  const data = await res.json().catch(() => ({}));
+  if (res.status === 401) { clearAuthState(); window.location.href = '/login'; }
+  if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
+  return data;
+}
+function renderDocs(items) {
+  if (!items?.length) return '<div class="empty">Nothing here yet.</div>';
+  return items.map(item => `
+    <div class="item">
+      <a class="item-title" href="/document/${encodeURIComponent(item.document_id)}">${escHtml(item.title || 'Untitled')}</a>
+      <div class="item-meta">${escHtml(item.category || item.document_type || item.source || 'Archive document')}</div>
+    </div>
+  `).join('');
+}
+function renderSearches(items) {
+  if (!items?.length) return '<div class="empty">No searches recorded yet.</div>';
+  return items.map(item => `
+    <div class="item">
+      <a class="item-title" href="/search?q=${encodeURIComponent(item.query || '')}">${escHtml(item.query || 'filtered archive')}</a>
+      <div class="item-meta">${escHtml(item.result_count)} results - ${escHtml((item.created_at || '').slice(0, 19))}</div>
+    </div>
+  `).join('');
+}
+function renderCollections(items) {
+  if (!items?.length) return '<div class="empty">Create your first collection above.</div>';
+  return items.map(col => `
+    <div class="item">
+      <div class="collection-head">
+        <div>
+          <div class="item-title">${escHtml(col.name)}</div>
+          <div class="item-meta">${escHtml(col.description || `${col.document_count} documents`)}</div>
+        </div>
+        <button class="btn secondary" type="button" onclick="deleteCollection('${escHtml(col.id)}')">Delete</button>
+      </div>
+      <div>${renderDocs(col.documents || [])}</div>
+    </div>
+  `).join('');
+}
+async function createCollection() {
+  const name = document.getElementById('collection-name').value.trim();
+  const description = document.getElementById('collection-description').value.trim();
+  if (!name) { setStatus('Collection name is required', true); return; }
+  await fetchJson('/api/collections', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ name, description }) });
+  document.getElementById('collection-name').value = '';
+  document.getElementById('collection-description').value = '';
+  await loadDashboard();
+}
+async function deleteCollection(id) {
+  await fetchJson(`/api/collections/${encodeURIComponent(id)}`, { method:'DELETE' });
+  await loadDashboard();
+}
+async function logoutUser() {
+  clearAuthState();
+  window.location.href = '/login';
+}
+async function loadDashboard() {
+  try {
+    const data = await fetchJson('/api/dashboard');
+    const stats = data.reading_statistics || {};
+    document.getElementById('stats').innerHTML = `
+      <div class="stat"><strong>${escHtml(stats.total_views || 0)}</strong><span>Total views</span></div>
+      <div class="stat"><strong>${escHtml(stats.unique_documents || 0)}</strong><span>Documents read</span></div>
+      <div class="stat"><strong>${escHtml(data.notes_count || 0)}</strong><span>Notes</span></div>`;
+    document.getElementById('recent-searches').innerHTML = renderSearches(data.recent_searches || []);
+    document.getElementById('recent-documents').innerHTML = renderDocs(data.recent_documents || []);
+    document.getElementById('bookmarks').innerHTML = renderDocs(data.bookmarks || []);
+    document.getElementById('recommendations').innerHTML = renderDocs(data.recommended_documents || []);
+    document.getElementById('collections').innerHTML = renderCollections(data.collections || []);
+  } catch (err) {
+    setStatus(err.message || 'Dashboard failed', true);
+  }
+}
+loadDashboard();
+</script>
+</body>
+</html>

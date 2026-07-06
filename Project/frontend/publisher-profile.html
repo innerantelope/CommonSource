@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Publisher Profile - CommonSource</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --red: #C0271F;
+  --dark: #1A1A1A;
+  --mid: #4A4A4A;
+  --light: #8A8A8A;
+  --rule: #E0DDD8;
+  --bg: #F7F6F2;
+  --white: #FFFFFF;
+  --serif: Georgia, 'Times New Roman', serif;
+  --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+body { font-family: var(--sans); background: var(--bg); color: var(--dark); min-height: 100vh; }
+header { background: var(--dark); border-bottom: 3px solid var(--red); padding: 0 24px; }
+.header-inner { max-width: 920px; margin: 0 auto; padding: 22px 0; display: flex; justify-content: space-between; align-items: center; gap: 18px; }
+.logo { font-family: var(--serif); font-size: 1.5rem; font-weight: 700; color: var(--white); text-decoration: none; }
+.logo span { color: var(--red); }
+.nav { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.nav a, .nav button { color: #CCC; background: transparent; border: 1px solid #444; border-radius: 4px; padding: 7px 10px; font-size: 0.76rem; text-decoration: none; cursor: pointer; }
+.nav a:hover, .nav button:hover { border-color: #777; color: var(--white); }
+main { max-width: 920px; margin: 0 auto; padding: 32px 24px 72px; }
+.intro { max-width: 680px; margin-bottom: 24px; }
+.intro h1 { font-family: var(--serif); font-size: 1.65rem; margin-bottom: 10px; }
+.intro p { color: var(--mid); font-size: 0.9rem; line-height: 1.65; }
+.status { min-height: 22px; color: var(--light); font-size: 0.8rem; margin-bottom: 14px; }
+.status.error { color: var(--red); }
+.layout { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
+.panel { background: var(--white); border: 1px solid var(--rule); border-radius: 4px; padding: 18px; }
+.panel h2 { font-size: 0.86rem; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 14px; }
+.field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--light); }
+.input { width: 100%; font-family: var(--sans); font-size: 0.9rem; padding: 10px 11px; border: 1px solid var(--rule); border-radius: 4px; background: var(--bg); color: var(--dark); outline: none; }
+textarea.input { min-height: 92px; resize: vertical; line-height: 1.55; }
+.input:focus { border-color: var(--red); background: var(--white); }
+.btn { font-family: var(--sans); font-size: 0.8rem; font-weight: 700; padding: 9px 14px; background: var(--red); color: var(--white); border: none; border-radius: 4px; cursor: pointer; }
+.btn.secondary { background: var(--white); color: var(--mid); border: 1px solid var(--rule); }
+.btn:disabled { background: #CCC; cursor: wait; }
+.summary-row { border-bottom: 1px solid var(--rule); padding: 9px 0; }
+.summary-row:last-child { border-bottom: 0; }
+.summary-label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--light); margin-bottom: 4px; }
+.summary-value { font-size: 0.88rem; color: var(--dark); }
+.empty { color: var(--light); font-size: 0.82rem; padding: 12px 0; }
+@media (max-width: 760px) { .layout { grid-template-columns: 1fr; } }
+</style>
+<link rel="stylesheet" href="/theme.css">
+</head>
+<body>
+<header>
+  <div class="header-inner">
+    <a class="logo" href="/search">Common<span>Source</span></a>
+    <div class="nav">
+      <a href="/search">Archive</a>
+      <a href="/publisher/dashboard">Dashboard</a>
+      <a href="/publisher/analytics">Analytics</a>
+      <button type="button" onclick="logoutUser()">Logout</button>
+    </div>
+  </div>
+</header>
+<main>
+  <section class="intro">
+    <h1>Publisher Profile</h1>
+    <p>Maintain your publisher identity or request publisher access for your organization.</p>
+  </section>
+  <div class="status" id="status" role="status"></div>
+
+  <div class="layout">
+    <section class="panel">
+      <h2>Profile</h2>
+      <form id="profile-form">
+        <div class="field">
+          <label for="organization_name">Organization name</label>
+          <input class="input" id="organization_name" required>
+        </div>
+        <div class="field">
+          <label for="description">Description</label>
+          <textarea class="input" id="description"></textarea>
+        </div>
+        <div class="field">
+          <label for="website">Website</label>
+          <input class="input" id="website" placeholder="https://example.org">
+        </div>
+        <div class="field">
+          <label for="logo_url">Logo URL</label>
+          <input class="input" id="logo_url">
+        </div>
+        <div class="field">
+          <label for="languages">Languages</label>
+          <input class="input" id="languages" placeholder="English, Hindi">
+        </div>
+        <div class="field">
+          <label for="topics">Topics</label>
+          <input class="input" id="topics" placeholder="Health, climate, local governance">
+        </div>
+        <div class="field">
+          <label for="coverage_regions">Coverage regions</label>
+          <input class="input" id="coverage_regions" placeholder="Bundelkhand, Delhi">
+        </div>
+        <button class="btn" id="save-profile" type="submit">Save profile</button>
+      </form>
+    </section>
+
+    <section class="panel">
+      <h2>Publisher Access</h2>
+      <div id="profile-summary"><div class="empty">Loading...</div></div>
+      <form id="application-form" style="margin-top:16px">
+        <div class="field">
+          <label for="application_org">Organization name</label>
+          <input class="input" id="application_org" required>
+        </div>
+        <div class="field">
+          <label for="application_website">Website</label>
+          <input class="input" id="application_website">
+        </div>
+        <div class="field">
+          <label for="application_reason">Reason</label>
+          <textarea class="input" id="application_reason" required></textarea>
+        </div>
+        <button class="btn secondary" id="apply-btn" type="submit">Request publisher access</button>
+      </form>
+    </section>
+  </div>
+</main>
+
+<script>
+const API = window.location.protocol === 'file:' ? 'http://localhost:5050' : '';
+const ACCESS_TOKEN_KEY = 'cs_access_token';
+const REFRESH_TOKEN_KEY = 'cs_refresh_token';
+const USER_KEY = 'cs_user';
+let csrfToken = '';
+
+function escHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+function getToken() {
+  return localStorage.getItem(ACCESS_TOKEN_KEY) || '';
+}
+
+function clearAuthState() {
+  localStorage.removeItem(ACCESS_TOKEN_KEY);
+  localStorage.removeItem(REFRESH_TOKEN_KEY);
+  localStorage.removeItem(USER_KEY);
+  csrfToken = '';
+}
+
+function setStatus(message, isError = false) {
+  const el = document.getElementById('status');
+  el.textContent = message || '';
+  el.classList.toggle('error', !!isError);
+}
+
+async function getCsrfToken() {
+  if (csrfToken) return csrfToken;
+  const res = await fetch(`${API}/api/auth/csrf`, {
+    headers: { Authorization: `Bearer ${getToken()}` }
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
+  csrfToken = data.csrf_token || '';
+  return csrfToken;
+}
+
+async function fetchJson(path, options = {}) {
+  const token = getToken();
+  if (!token) {
+    window.location.href = '/login';
+    throw new Error('Login required');
+  }
+  const method = (options.method || 'GET').toUpperCase();
+  const headers = { ...(options.headers || {}), Authorization: `Bearer ${token}` };
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+    headers['X-CSRF-Token'] = headers['X-CSRF-Token'] || await getCsrfToken();
+  }
+  const res = await fetch(`${API}${path}`, { ...options, headers });
+  const data = await res.json().catch(() => ({}));
+  if (res.status === 401) {
+    clearAuthState();
+    window.location.href = '/login';
+  }
+  if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
+  return data;
+}
+
+function fillProfile(profile) {
+  if (!profile) return;
+  ['organization_name', 'description', 'website', 'logo_url', 'languages', 'topics', 'coverage_regions'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = profile[id] || '';
+  });
+  document.getElementById('application_org').value = profile.organization_name || '';
+  document.getElementById('application_website').value = profile.website || '';
+}
+
+function renderSummary(data) {
+  const profile = data.profile;
+  const publisher = data.publisher;
+  const app = data.pending_application;
+  const rows = [
+    ['Verification', profile?.verification_status || 'none'],
+    ['Legacy publisher', publisher?.status || 'not linked'],
+    ['Pending application', app ? app.organization_name : 'none'],
+  ];
+  document.getElementById('profile-summary').innerHTML = rows.map(([label, value]) => `
+    <div class="summary-row">
+      <div class="summary-label">${escHtml(label)}</div>
+      <div class="summary-value">${escHtml(value)}</div>
+    </div>
+  `).join('');
+}
+
+async function loadProfile() {
+  setStatus('Loading publisher profile...');
+  try {
+    const data = await fetchJson('/api/publisher/profile');
+    fillProfile(data.profile);
+    renderSummary(data);
+    setStatus('');
+  } catch (err) {
+    setStatus(err.message || 'Could not load publisher profile.', true);
+  }
+}
+
+async function logoutUser() {
+  const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY) || '';
+  try {
+    await fetch(`${API}/api/auth/logout`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {})
+      },
+      body: JSON.stringify({ refresh_token: refreshToken })
+    });
+  } finally {
+    clearAuthState();
+    window.location.href = '/login';
+  }
+}
+
+document.getElementById('profile-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  const btn = document.getElementById('save-profile');
+  btn.disabled = true;
+  setStatus('Saving profile...');
+  try {
+    await fetchJson('/api/publisher/profile', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        organization_name: document.getElementById('organization_name').value.trim(),
+        description: document.getElementById('description').value.trim(),
+        website: document.getElementById('website').value.trim(),
+        logo_url: document.getElementById('logo_url').value.trim(),
+        languages: document.getElementById('languages').value.trim(),
+        topics: document.getElementById('topics').value.trim(),
+        coverage_regions: document.getElementById('coverage_regions').value.trim(),
+      })
+    });
+    await loadProfile();
+    setStatus('Publisher profile saved.');
+  } catch (err) {
+    setStatus(err.message || 'Could not save profile.', true);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+document.getElementById('application-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  const btn = document.getElementById('apply-btn');
+  btn.disabled = true;
+  setStatus('Submitting publisher application...');
+  try {
+    await fetchJson('/api/publisher/apply', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        organization_name: document.getElementById('application_org').value.trim(),
+        website: document.getElementById('application_website').value.trim(),
+        reason: document.getElementById('application_reason').value.trim(),
+      })
+    });
+    await loadProfile();
+    setStatus('Publisher application submitted.');
+  } catch (err) {
+    setStatus(err.message || 'Could not submit application.', true);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+document.addEventListener('DOMContentLoaded', loadProfile);
+</script>
+</body>
+</html>
