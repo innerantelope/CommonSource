@@ -1,7 +1,44 @@
-# CommonSource vector infrastructure
-# Usage: docker compose up -d qdrant
-
 services:
+  commonsource:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: commonsource:latest
+    container_name: commonsource-app
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      COMMONSOURCE_PORT: "5050"
+      COMMONSOURCE_USE_QDRANT: "1"
+      QDRANT_URL: "http://qdrant:6333"
+      QDRANT_COLLECTION: "${QDRANT_COLLECTION:-commonsource_chunks}"
+      PYTHONIOENCODING: "utf-8"
+    ports:
+      - "5050:5050"
+    volumes:
+      - commonsource_database:/opt/commonsource/Project/data/database
+      - commonsource_uploads:/opt/commonsource/Project/data/imports
+      - commonsource_email_outbox:/opt/commonsource/Project/data/email_outbox
+      - commonsource_cache:/opt/commonsource/Project/data/cache
+      - commonsource_security:/opt/commonsource/Project/data/security
+    depends_on:
+      qdrant:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5050/api/health', timeout=5).read()"
+        ]
+      interval: 30s
+      timeout: 5s
+      start_period: 45s
+      retries: 3
+
   qdrant:
     image: qdrant/qdrant:v1.12.5
     container_name: commonsource-qdrant
@@ -12,10 +49,20 @@ services:
       - qdrant_storage:/qdrant/storage
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:6333/readyz"]
+      test:
+        [
+          "CMD-SHELL",
+          "bash -ec 'exec 3<>/dev/tcp/127.0.0.1/6333; printf \"GET /readyz HTTP/1.1\\r\\nHost: 127.0.0.1\\r\\nConnection: close\\r\\n\\r\\n\" >&3; grep -q \"200\" <&3'"
+        ]
       interval: 10s
       timeout: 5s
+      start_period: 10s
       retries: 5
 
 volumes:
+  commonsource_database:
+  commonsource_uploads:
+  commonsource_email_outbox:
+  commonsource_cache:
+  commonsource_security:
   qdrant_storage:
