@@ -80,6 +80,14 @@ try:
 except ImportError:
     HAS_DEEP_TRANSLATOR = False
 
+try:
+    from llm_provider import llm_health as provider_llm_health, provider_status as llm_provider_status
+    HAS_LLM_PROVIDER = True
+except Exception:
+    provider_llm_health = None
+    llm_provider_status = None
+    HAS_LLM_PROVIDER = False
+
 # ── Config ────────────────────────────────────────────────────────────────────
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -4110,6 +4118,12 @@ def models():
         return jsonify({"error": str(e), "models": []})
 
 
+@app.route("/api/health")
+def app_health():
+    """Lightweight application liveness check for Docker and load balancers."""
+    return jsonify({"status": "healthy", "service": "commonsource"}), 200
+
+
 @app.route("/api/health/models")
 def model_health():
     """Detailed model/Ollama health for the operator health page."""
@@ -4156,6 +4170,66 @@ def model_health():
         report["error"] = str(exc)
         report["seconds"] = round(time.time() - started, 3)
         return jsonify(report), 200
+
+
+@app.route("/api/llm/health")
+@app.route("/api/health/llm")
+def llm_health_api():
+    """Report configured LLM provider, active model, fallback, and API availability."""
+    timeout = get_request_timeout(8, minimum=2, maximum=30)
+    configured = os.getenv("COMMONSOURCE_LLM_PROVIDER", "gemini").strip().lower() or "gemini"
+    fallback_provider = os.getenv("COMMONSOURCE_LLM_FALLBACK_PROVIDERS", "ollama").split(",", 1)[0].strip() or "ollama"
+    model = (
+        os.getenv("COMMONSOURCE_GEMINI_MODEL")
+        or os.getenv("COMMONSOURCE_LLM_MODEL")
+        or "gemini-2.5-flash"
+    ).strip()
+    report: Dict[str, Any] = {
+        "configured_provider": configured,
+        "active_provider": None,
+        "provider": configured,
+        "model": model,
+        "fallback_provider": fallback_provider,
+        "fallback_available": False,
+        "api_available": False,
+        "configured": False,
+        "status": "unhealthy",
+        "error": None,
+    }
+    try:
+        if HAS_LLM_PROVIDER and provider_llm_health and llm_provider_status:
+            status = llm_provider_status(model)
+            health = provider_llm_health(timeout=timeout)
+            provider_order = status.get("provider_order") or [configured]
+            fallback_available = bool(health.get("fallback_available"))
+            api_available = bool(health.get("api_connected") or fallback_available)
+            active_provider = configured if health.get("api_connected") else (health.get("fallback_provider") if fallback_available else None)
+            report.update({
+                "active_provider": active_provider,
+                "provider_order": provider_order,
+                "models": status.get("models", {}),
+                "model": health.get("model") or model,
+                "fallback_provider": health.get("fallback_provider") or fallback_provider,
+                "fallback_model": health.get("fallback_model"),
+                "fallback_available": fallback_available,
+                "api_available": api_available,
+                "configured": bool(health.get("configured")),
+                "last_error": health.get("last_error"),
+                "status": "healthy" if api_available else "unhealthy",
+            })
+        else:
+            report.update({
+                "active_provider": configured if os.getenv("GEMINI_API_KEY") else None,
+                "api_available": bool(os.getenv("GEMINI_API_KEY")),
+                "configured": bool(os.getenv("GEMINI_API_KEY")),
+                "error": "llm_provider module is not available",
+                "status": "healthy" if os.getenv("GEMINI_API_KEY") else "unhealthy",
+            })
+        return jsonify(report), 200 if report["status"] == "healthy" else 503
+    except Exception as exc:
+        log.exception("LLM health endpoint failed")
+        report["error"] = str(exc)
+        return jsonify(report), 500
 
 
 @app.route("/api/stats")

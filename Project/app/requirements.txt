@@ -13,12 +13,13 @@ sentence-transformers>=3.0.0
 # Search API
 flask>=3.0.0
 flask-cors>=4.0.0
+gunicorn>=22.0.0
 
 # Password hashing
 bcrypt>=5.0.0
 
 # Vector retrieval
-qdrant-client>=1.12.0
+qdrant-client>=1.12.0,<1.13.0
 
 # Translation with deep-translator (no Ollama required)
 deep-translator>=1.11.4
