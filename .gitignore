@@ -6,6 +6,7 @@ Project/.env
 Project/.env.*
 !Project/.env.example
 !Project/.env.demo.example
+!Project/.env.docker.example
 !Project/deploy/oracle/*.env.example
 Project/app/.env
 
