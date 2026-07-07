@@ -1,0 +1,51 @@
+name: Deploy CommonSource
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VM_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ secrets.VM_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy to VM
+        run: |
+          ssh -i ~/.ssh/id_ed25519 \
+            ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} << 'EOF'
+            set -e
+
+            echo "=== Updating repository ==="
+            cd ~/CommonSource
+            git pull origin main
+
+            echo "=== Building Docker containers ==="
+            cd Project
+            docker compose build
+
+            echo "=== Restarting containers ==="
+            docker compose up -d
+
+            echo "=== Cleaning old Docker images ==="
+            docker image prune -f
+
+            echo "=== Waiting for application ==="
+            sleep 10
+
+            echo "=== Health Check ==="
+            curl --fail http://localhost:5050/api/health
+
+            echo "✅ Deployment Successful"
+          EOF
