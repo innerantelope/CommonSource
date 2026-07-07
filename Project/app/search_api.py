@@ -25,18 +25,21 @@ import hashlib
 import json
 import logging
 import os
+import secrets
 import sqlite3
 import struct
 import sys
 import time
 import uuid
 from collections import OrderedDict
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+from email.message import EmailMessage
 from functools import wraps
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from urllib.parse import urlparse
 import re
+import smtplib
 
 from flask import Flask, g, has_request_context, jsonify, request, send_file, send_from_directory
 from flask_cors import CORS
@@ -55,6 +58,7 @@ from auth_service import (
     get_user_by_email,
     issue_token_pair,
     is_access_token_revoked,
+    get_jwt_secret,
     list_users as auth_list_users,
     refresh_token_pair,
     refresh_token_user_id,
@@ -1360,6 +1364,70 @@ def auth_error_response(exc: Exception, fallback_status: int = 500):
     status = getattr(exc, "status_code", fallback_status)
     log.warning("[AUTH] %s", exc)
     return jsonify({"error": str(exc)}), status
+
+
+OTP_PURPOSES = {"REGISTER", "PASSWORD_RESET", "ADMIN_LOGIN"}
+OTP_TTL_SECONDS = int(os.getenv("COMMONSOURCE_OTP_TTL_SECONDS", "600"))
+
+
+def normalize_auth_email(email: str) -> str:
+    return (email or "").strip().lower()
+
+
+def valid_auth_email(email: str) -> bool:
+    return bool(re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email or ""))
+
+
+def hash_email_otp(email: str, purpose: str, otp: str) -> str:
+    secret = os.getenv("COMMONSOURCE_OTP_SECRET", "").encode("utf-8") or get_jwt_secret()
+    payload = f"{normalize_auth_email(email)}:{purpose}:{otp}".encode("utf-8")
+    return hashlib.sha256(secret + b":" + payload).hexdigest()
+
+
+def otp_outbox_path(email: str, purpose: str) -> Path:
+    safe_email = re.sub(r"[^a-zA-Z0-9_.-]+", "_", normalize_auth_email(email)) or "unknown"
+    outbox_dir = PROJECT_ROOT / "data" / "email_outbox"
+    outbox_dir.mkdir(parents=True, exist_ok=True)
+    return outbox_dir / f"{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}_{purpose.lower()}_{safe_email}.txt"
+
+
+def deliver_email_otp(email: str, purpose: str, otp: str) -> Dict[str, Any]:
+    subject = {
+        "REGISTER": "Your CommonSource registration OTP",
+        "PASSWORD_RESET": "Your CommonSource password reset OTP",
+        "ADMIN_LOGIN": "Your CommonSource admin login OTP",
+    }.get(purpose, "Your CommonSource OTP")
+    body = (
+        f"Your CommonSource OTP is: {otp}\n\n"
+        f"Purpose: {purpose}\n"
+        f"This code expires in {max(1, OTP_TTL_SECONDS // 60)} minutes.\n"
+    )
+
+    smtp_host = os.getenv("SMTP_HOST", "").strip()
+    smtp_username = os.getenv("SMTP_USERNAME", "").strip()
+    smtp_password = os.getenv("SMTP_PASSWORD", "").strip()
+    smtp_from = os.getenv("SMTP_FROM", smtp_username).strip()
+    smtp_port = int(os.getenv("SMTP_PORT", "587"))
+
+    if smtp_host and smtp_username and smtp_password and smtp_from:
+        message = EmailMessage()
+        message["Subject"] = subject
+        message["From"] = smtp_from
+        message["To"] = email
+        message.set_content(body)
+        try:
+            with smtplib.SMTP(smtp_host, smtp_port, timeout=15) as smtp:
+                smtp.starttls()
+                smtp.login(smtp_username, smtp_password)
+                smtp.send_message(message)
+            return {"provider": "smtp", "sent": True}
+        except Exception as exc:
+            log.exception("[AUTH] OTP email delivery failed")
+            return {"provider": "smtp", "sent": False, "error": str(exc)}
+
+    path = otp_outbox_path(email, purpose)
+    path.write_text(f"To: {email}\nSubject: {subject}\n\n{body}", encoding="utf-8")
+    return {"provider": "outbox", "sent": True, "outbox_path": str(path)}
 
 
 def login_rate_key(email: str) -> str:
@@ -2906,6 +2974,63 @@ def login_page():
 @app.route("/register")
 def register_page():
     return send_from_directory(str(WEB_DIR), "register.html")
+
+
+@app.route("/api/auth/otp/send", methods=["POST"])
+def auth_send_otp():
+    ensure_phase2a_schema()
+    data = request.get_json(silent=True) or {}
+    email = normalize_auth_email(data.get("email") or "")
+    purpose = (data.get("purpose") or "REGISTER").strip().upper()
+
+    if not valid_auth_email(email):
+        return jsonify({"error": "Valid email is required"}), 400
+    if purpose not in OTP_PURPOSES:
+        return jsonify({"error": "Unsupported OTP purpose"}), 400
+
+    otp = f"{secrets.randbelow(1_000_000):06d}"
+    now = datetime.now(timezone.utc)
+    expires_at = now + timedelta(seconds=OTP_TTL_SECONDS)
+    delivery = deliver_email_otp(email, purpose, otp)
+    if delivery.get("provider") == "smtp" and not delivery.get("sent"):
+        return jsonify({
+            "error": delivery.get("error") or "Email delivery failed",
+            "delivery": delivery,
+        }), 502
+
+    conn = get_conn()
+    try:
+        conn.execute(
+            """
+            INSERT INTO email_otps
+              (id, email, otp_hash, purpose, attempts, expires_at, consumed_at, created_at)
+            VALUES (?, ?, ?, ?, 0, ?, NULL, ?)
+            """,
+            (
+                make_id("otp"),
+                email,
+                hash_email_otp(email, purpose, otp),
+                purpose,
+                expires_at.isoformat(),
+                now.isoformat(),
+            ),
+        )
+        conn.commit()
+        response = {
+            "success": True,
+            "message": "OTP generated successfully.",
+            "delivery": delivery,
+            "expires_at": expires_at.isoformat(),
+        }
+        if os.getenv("COMMONSOURCE_DEV_OTP") == "1":
+            response["otp"] = otp
+        return jsonify(response), 200
+    except Exception:
+        conn.rollback()
+        log.exception("[AUTH] OTP generation failed")
+        return jsonify({"error": "OTP generation failed"}), 500
+    finally:
+        conn.close()
 
 
 @app.route("/api/auth/register", methods=["POST"])
