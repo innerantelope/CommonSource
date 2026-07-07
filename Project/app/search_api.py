@@ -38,7 +38,7 @@ from typing import Any, Dict, List, Optional
 from urllib.parse import urlparse
 import re
 
-from flask import Flask, g, jsonify, request, send_file, send_from_directory
+from flask import Flask, g, has_request_context, jsonify, request, send_file, send_from_directory
 from flask_cors import CORS
 from auth_service import (
     ADMIN_ROLES,
