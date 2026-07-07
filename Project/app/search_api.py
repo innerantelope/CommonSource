@@ -81,9 +81,11 @@ except ImportError:
     HAS_DEEP_TRANSLATOR = False
 
 try:
+    from llm_provider import generate as provider_generate
     from llm_provider import llm_health as provider_llm_health, provider_status as llm_provider_status
     HAS_LLM_PROVIDER = True
 except Exception:
+    provider_generate = None
     provider_llm_health = None
     llm_provider_status = None
     HAS_LLM_PROVIDER = False
@@ -483,9 +485,33 @@ def call_ollama(
     temperature: float = 0.2,
     cache: bool = True,
 ) -> str:
-    import requests as req
     if not model:
         raise OllamaGenerationError("No generation model available")
+
+    provider_name = os.getenv("COMMONSOURCE_LLM_PROVIDER", "gemini").strip().lower()
+    if HAS_LLM_PROVIDER and provider_generate and (
+        provider_name in {"gemini", "auto", "openrouter", "groq"}
+        or model.lower().startswith(("gemini", "models/gemini"))
+    ):
+        try:
+            result = provider_generate(
+                prompt,
+                preferred_model=model,
+                max_tokens=max_tokens,
+                timeout=float(timeout or 60),
+                temperature=temperature,
+            )
+            log.info(
+                "[LLM] provider=%s model=%s latency_ms=%s",
+                result.provider,
+                result.model,
+                result.latency_ms,
+            )
+            return clean_generation_response(result.text)
+        except Exception as exc:
+            raise OllamaGenerationError(str(exc)) from exc
+
+    import requests as req
 
     prompt = prepare_prompt_for_model(prompt, model)
     timeout = float(timeout or 60)
@@ -4013,15 +4039,16 @@ def generate():
         return jsonify({"error": "No generation model available in Ollama"}), 503
 
     try:
-        response = call_ollama(
+        if not (HAS_LLM_PROVIDER and provider_generate):
+            return jsonify({"error": "No generation provider available"}), 503
+        result = provider_generate(
             prompt,
-            model,
+            preferred_model=model,
             max_tokens=max_tok,
             timeout=timeout,
             temperature=0.7,
-            cache=False,
         )
-        return jsonify({"response": response, "model": model})
+        return jsonify({"response": result.text, "model": result.model})
     except OllamaGenerationError as exc:
         status = 504 if "timed out" in str(exc).lower() else 502
         return jsonify({"error": str(exc)}), status
