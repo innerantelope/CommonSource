@@ -74,6 +74,64 @@ from auth_service import (
 from source_classifier import classify_source
 from utils.vectors import embedding_to_blob
 
+
+def load_local_env_files() -> None:
+    """Load local env files for VS Code/dev without overriding production env."""
+    project_root = Path(__file__).resolve().parents[1]
+    for env_path in (project_root / ".env", project_root / ".env.local", project_root / "app" / ".env"):
+        if not env_path.exists():
+            continue
+        try:
+            for raw_line in env_path.read_text(encoding="utf-8").splitlines():
+                line = raw_line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                key, value = line.split("=", 1)
+                key = key.strip()
+                value = value.strip().strip('"').strip("'")
+                if key and key not in os.environ:
+                    os.environ[key] = value
+        except OSError:
+            logging.getLogger(__name__).exception("[ENV] Could not load %s", env_path)
+
+
+def env_first(*names: str, default: str = "") -> str:
+    for name in names:
+        value = os.getenv(name)
+        if value is not None and value.strip():
+            return value.strip()
+    return default
+
+
+def smtp_password_value() -> str:
+    return env_first("SMTP_PASSWORD", "COMMONSOURCE_SMTP_PASSWORD")
+
+
+def smtp_config_snapshot() -> Dict[str, Any]:
+    smtp_host = env_first("SMTP_HOST", "COMMONSOURCE_SMTP_HOST")
+    smtp_username = env_first("SMTP_USERNAME", "COMMONSOURCE_SMTP_USERNAME", "COMMONSOURCE_SMTP_USER")
+    smtp_password = smtp_password_value()
+    smtp_from = env_first("SMTP_FROM", "COMMONSOURCE_SMTP_FROM", "COMMONSOURCE_EMAIL_FROM", default=smtp_username)
+    smtp_port_raw = env_first("SMTP_PORT", "COMMONSOURCE_SMTP_PORT", default="587")
+    try:
+        smtp_port = int(smtp_port_raw)
+    except ValueError:
+        logging.getLogger(__name__).warning("[EMAIL] Invalid SMTP port %r; using 587", smtp_port_raw)
+        smtp_port = 587
+    configured = bool(smtp_host and smtp_username and smtp_password and smtp_from)
+    return {
+        "host": smtp_host,
+        "port": smtp_port,
+        "username": smtp_username,
+        "from": smtp_from,
+        "credentials_detected": bool(smtp_username and smtp_password),
+        "configured": configured,
+        "dev_otp": os.getenv("COMMONSOURCE_DEV_OTP", "").strip() == "1",
+    }
+
+
+load_local_env_files()
+
 # Upgraded retrieval stack (see app/retrieval/, app/embed.py, docs/MIGRATION-QDRANT.md)
 from embed import embed_query as embed, warmup_embeddings
 
@@ -227,6 +285,14 @@ app = Flask(__name__, static_folder=str(WEB_DIR), static_url_path="")
 CORS(app)
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 log = logging.getLogger(__name__)
+_smtp_startup = smtp_config_snapshot()
+log.info(
+    "[EMAIL] SMTP configured: %s host=%s port=%s Development OTP mode: %s",
+    _smtp_startup["configured"],
+    _smtp_startup["host"] or "(missing)",
+    _smtp_startup["port"],
+    _smtp_startup["dev_otp"],
+)
 
 @app.before_request
 def start_request_timer():
@@ -1403,30 +1469,50 @@ def deliver_email_otp(email: str, purpose: str, otp: str) -> Dict[str, Any]:
         f"This code expires in {max(1, OTP_TTL_SECONDS // 60)} minutes.\n"
     )
 
-    smtp_host = os.getenv("SMTP_HOST", "").strip()
-    smtp_username = os.getenv("SMTP_USERNAME", "").strip()
-    smtp_password = os.getenv("SMTP_PASSWORD", "").strip()
-    smtp_from = os.getenv("SMTP_FROM", smtp_username).strip()
-    smtp_port = int(os.getenv("SMTP_PORT", "587"))
+    smtp = smtp_config_snapshot()
+    log.info(
+        "[EMAIL] OTP delivery requested recipient=%s purpose=%s provider=%s host=%s port=%s username=%s credentials_detected=%s configured=%s",
+        email,
+        purpose,
+        "smtp" if smtp["configured"] else ("development" if smtp["dev_otp"] else "outbox"),
+        smtp["host"] or "(missing)",
+        smtp["port"],
+        smtp["username"] or "(missing)",
+        smtp["credentials_detected"],
+        smtp["configured"],
+    )
 
-    if smtp_host and smtp_username and smtp_password and smtp_from:
+    if not smtp["configured"] and smtp["dev_otp"]:
+        log.info("[EMAIL] Development OTP mode active recipient=%s purpose=%s sent=True", email, purpose)
+        return {"provider": "development", "sent": True}
+
+    if smtp["configured"]:
         message = EmailMessage()
         message["Subject"] = subject
-        message["From"] = smtp_from
+        message["From"] = smtp["from"]
         message["To"] = email
         message.set_content(body)
         try:
-            with smtplib.SMTP(smtp_host, smtp_port, timeout=15) as smtp:
-                smtp.starttls()
-                smtp.login(smtp_username, smtp_password)
-                smtp.send_message(message)
+            with smtplib.SMTP(smtp["host"], smtp["port"], timeout=15) as smtp_conn:
+                smtp_conn.starttls()
+                smtp_conn.login(smtp["username"], smtp_password_value())
+                smtp_conn.send_message(message)
+            log.info("[EMAIL] OTP email sent recipient=%s provider=smtp host=%s port=%s", email, smtp["host"], smtp["port"])
             return {"provider": "smtp", "sent": True}
         except Exception as exc:
-            log.exception("[AUTH] OTP email delivery failed")
-            return {"provider": "smtp", "sent": False, "error": str(exc)}
+            log.exception(
+                "[EMAIL] OTP email delivery failed recipient=%s provider=smtp host=%s port=%s username=%s error=%s",
+                email,
+                smtp["host"],
+                smtp["port"],
+                smtp["username"] or "(missing)",
+                exc,
+            )
+            return {"provider": "smtp", "sent": False, "error": f"{type(exc).__name__}: {exc}"}
 
     path = otp_outbox_path(email, purpose)
     path.write_text(f"To: {email}\nSubject: {subject}\n\n{body}", encoding="utf-8")
+    log.info("[EMAIL] SMTP not configured; OTP written to outbox recipient=%s path=%s", email, path)
     return {"provider": "outbox", "sent": True, "outbox_path": str(path)}
 
 
@@ -3022,7 +3108,7 @@ def auth_send_otp():
             "delivery": delivery,
             "expires_at": expires_at.isoformat(),
         }
-        if os.getenv("COMMONSOURCE_DEV_OTP") == "1":
+        if delivery.get("provider") == "development" or os.getenv("COMMONSOURCE_DEV_OTP") == "1":
             response["otp"] = otp
         return jsonify(response), 200
     except Exception:
