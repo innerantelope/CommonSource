@@ -13,7 +13,7 @@
     ],
     reader: [
       ['Search', '/search'],
-      ['Dashboard', '/index.html'],
+      ['Dashboard', '/search'],
       ['Profile', '/profile'],
       ['Bookmarks', '/dashboard#bookmarks'],
       ['Collections', '/dashboard#collections'],
@@ -21,7 +21,7 @@
     ],
     publisher: [
       ['Search', '/search'],
-      ['Dashboard', '/index.html'],
+      ['Dashboard', '/search'],
       ['Profile', '/profile'],
       ['Bookmarks', '/dashboard#bookmarks'],
       ['Collections', '/dashboard#collections'],
@@ -31,31 +31,27 @@
     ],
     reviewer: [
       ['Search', '/search'],
-      ['Dashboard', '/index.html'],
+      ['Dashboard', '/search'],
       ['Profile', '/profile'],
       ['Moderation Queue', '/moderation'],
       ['Topics', '/topics'],
     ],
     admin: [
       ['Search', '/search'],
-      ['Dashboard', '/index.html'],
+      ['Dashboard', '/search'],
       ['Profile', '/profile'],
       ['Users', '/users'],
       ['Applications', '/admin/publisher-applications'],
       ['Moderation', '/moderation'],
-      ['Feed Management', '/index.html#admin'],
       ['Topics', '/topics'],
     ],
     super_admin: [
       ['Search', '/search'],
-      ['Dashboard', '/index.html'],
+      ['Dashboard', '/search'],
       ['Profile', '/profile'],
       ['Users', '/users'],
       ['Applications', '/admin/publisher-applications'],
       ['Moderation', '/moderation'],
-      ['Feed Management', '/index.html#admin'],
-      ['Admin', '/index.html#admin'],
-      ['System Controls', '/index.html#health'],
       ['Topics', '/topics'],
     ],
   };
@@ -161,7 +157,7 @@
 
   function renderRoleNav(container, user) {
     const role = user?.role || 'anonymous';
-    const links = linksByRole[role] || linksByRole.reader;
+    const links = removeCurrentPageLinks(linksByRole[role] || linksByRole.reader);
     const items = links.map(([label, href]) => {
       if (label === 'Login') {
         return `<a class="commonsource-nav-icon" href="${escapeHtml(href)}" title="Login" aria-label="Login">${navIcon('login')}</a>`;
@@ -174,6 +170,19 @@
     }
     container.innerHTML = items.join('');
     container.querySelector('[data-commonsource-logout]')?.addEventListener('click', logoutUser);
+  }
+
+  function removeCurrentPageLinks(links) {
+    const currentPath = normalizePath(window.location.pathname);
+    return links.filter(([, href]) => {
+      const path = normalizePath(new URL(href, window.location.origin).pathname);
+      return path !== currentPath;
+    });
+  }
+
+  function normalizePath(path) {
+    if (path === '/index.html') return '/search';
+    return (path || '/').replace(/\/$/, '') || '/';
   }
 
   async function initRoleNav(selector = '[data-role-nav]') {
