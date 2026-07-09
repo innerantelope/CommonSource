@@ -1434,6 +1434,7 @@ def auth_error_response(exc: Exception, fallback_status: int = 500):
 
 OTP_PURPOSES = {"REGISTER", "PASSWORD_RESET", "ADMIN_LOGIN"}
 OTP_TTL_SECONDS = int(os.getenv("COMMONSOURCE_OTP_TTL_SECONDS", "600"))
+DEFAULT_SUPER_ADMIN_EMAILS = {"abeer.cgl@gmail.com"}
 
 
 def normalize_auth_email(email: str) -> str:
@@ -1448,6 +1449,25 @@ def hash_email_otp(email: str, purpose: str, otp: str) -> str:
     secret = os.getenv("COMMONSOURCE_OTP_SECRET", "").encode("utf-8") or get_jwt_secret()
     payload = f"{normalize_auth_email(email)}:{purpose}:{otp}".encode("utf-8")
     return hashlib.sha256(secret + b":" + payload).hexdigest()
+
+
+def registration_default_role(conn: sqlite3.Connection, email: str) -> str:
+    if normalize_auth_email(email) in DEFAULT_SUPER_ADMIN_EMAILS:
+        return "super_admin"
+    return "super_admin" if user_count(conn) == 0 else "reader"
+
+
+def ensure_default_super_admins(conn: sqlite3.Connection) -> None:
+    now = utc_now()
+    for email in DEFAULT_SUPER_ADMIN_EMAILS:
+        conn.execute(
+            """
+            UPDATE users
+            SET role = 'super_admin', updated_at = ?
+            WHERE lower(email) = ? AND role != 'super_admin'
+            """,
+            (now, email),
+        )
 
 
 def otp_outbox_path(email: str, purpose: str) -> Path:
@@ -3130,7 +3150,8 @@ def auth_register():
 
     conn = get_conn()
     try:
-        role = "super_admin" if user_count(conn) == 0 else "reader"
+        ensure_default_super_admins(conn)
+        role = registration_default_role(conn, email)
         user = create_user(conn, name=name, email=email, password=password, role=role)
         tokens = issue_token_pair(conn, user, ip_address=client_ip())
         record_audit(conn, "Registration", "user", user["id"], user_id=user["id"])
@@ -3166,6 +3187,7 @@ def auth_login():
         return jsonify({"error": "Too many login attempts. Try again shortly."}), 429
     conn = get_conn()
     try:
+        ensure_default_super_admins(conn)
         user = authenticate_user(conn, email, password)
         tokens = issue_token_pair(conn, user, ip_address=client_ip())
         record_audit(conn, "Login", "user", user["id"], user_id=user["id"])
